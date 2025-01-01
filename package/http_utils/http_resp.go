@@ -27,7 +27,7 @@ func writeJSON(w http.ResponseWriter, status int, data envelope, headers http.He
 }
 
 func Ok(w http.ResponseWriter, r *http.Request, status int, payload any) {
-	err := writeJSON(w, status, envelope{"data": payload, "success": true}, nil)
+	err := writeJSON(w, status, envelope{"data": payload, "code": 0}, nil)
 	if err != nil {
 		ServerErrorResponse(w, r, err)
 	}

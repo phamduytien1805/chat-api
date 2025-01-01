@@ -33,4 +33,4 @@ sqlc:
 	sqlc generate
 
 api:
-	go run main.go
+	go run cmd/main.go

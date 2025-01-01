@@ -5,7 +5,7 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgconn"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/phamduytien1805/internal/platform/db"
 	"github.com/phamduytien1805/package/common"
 )

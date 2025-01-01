@@ -56,7 +56,7 @@ func setDefault() {
 	viper.SetDefault("web.http.server.port", 5001)
 	viper.SetDefault("web.http.ws.port", 5002)
 	viper.SetDefault("env", "development")
-	viper.SetDefault("db.source", "postgresql://root:secret@localhost:5432/coreapi?sslmode=disable")
+	viper.SetDefault("db.source", "postgresql://root:secret@localhost:5432/core?sslmode=disable")
 
 	viper.SetDefault("hash.time", 1)
 	viper.SetDefault("hash.memory", 64*1024)

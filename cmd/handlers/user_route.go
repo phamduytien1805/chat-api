@@ -10,19 +10,22 @@ import (
 )
 
 func (s *HttpServer) registerUser(w http.ResponseWriter, r *http.Request) {
-	createUserRequest := user.CreateUserForm{}
+	createUserRequest := &user.CreateUserForm{}
 	if err := render.DecodeJSON(r.Body, createUserRequest); err != nil {
+		s.logger.Error(err.Error())
 		http_utils.BadRequestResponse(w, r, err)
 		return
 	}
 
 	if err := s.validator.Struct(createUserRequest); err != nil {
+		s.logger.Error(err.Error())
 		http_utils.FailedValidationResponse(w, r, err)
 		return
 	}
 
-	createdUser, err := s.userSvc.CreateUserWithCredential(r.Context(), createUserRequest)
+	createdUser, err := s.userSvc.CreateUserWithCredential(r.Context(), *createUserRequest)
 	if err != nil {
+		s.logger.Error(err.Error())
 		if errors.Is(err, user.ErrorUserResourceConflict) {
 			http_utils.EditConflictResponse(w, r, err)
 			return

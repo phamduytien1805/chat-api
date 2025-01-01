@@ -12,9 +12,9 @@ type ErrResponse struct {
 	Err            error `json:"-"` // low-level runtime error
 	HTTPStatusCode int   `json:"-"` // http response status code
 
-	AppCode string `json:"code,omitempty"`   // application-specific error code
-	Reason  string `json:"reason,omitempty"` // user-level status message
-	Errors  any    `json:"errors,omitempty"` // user-level status message
+	AppCode ResponseCode `json:"code,omitempty"`   // application-specific error code
+	Reason  string       `json:"reason,omitempty"` // user-level status message
+	Errors  any          `json:"errors,omitempty"` // user-level status message
 
 }
 
@@ -32,15 +32,16 @@ func (e *ErrResponse) Render(w http.ResponseWriter, r *http.Request) error {
 // 	app.logger.Error(err.Error(), "method", method, "uri", uri)
 // }
 
-func errorResponse(w http.ResponseWriter, r *http.Request, status int, message string, err any) {
+func errorResponse(w http.ResponseWriter, r *http.Request, status int, message string, err any, code ResponseCode) {
 	render.Render(w, r, &ErrResponse{
 		HTTPStatusCode: status,
 		Reason:         message,
 		Errors:         err,
+		AppCode:        code,
 	})
 }
 func errorResponseDefault(w http.ResponseWriter, r *http.Request, status int, message string) {
-	errorResponse(w, r, status, message, nil)
+	errorResponse(w, r, status, message, nil, ERROR)
 }
 
 func ServerErrorResponse(w http.ResponseWriter, r *http.Request, err error) {
@@ -64,7 +65,7 @@ func BadRequestResponse(w http.ResponseWriter, r *http.Request, err error) {
 
 func FailedValidationResponse(w http.ResponseWriter, r *http.Request, err error) {
 	message := fmt.Sprintf("Request body is not valid")
-	errorResponse(w, r, http.StatusUnprocessableEntity, message, validator.ValidatorErrors(err))
+	errorResponse(w, r, http.StatusUnprocessableEntity, message, validator.ValidatorErrors(err), ERROR_VALIDATION)
 }
 
 func EditConflictResponse(w http.ResponseWriter, r *http.Request, err error) {
@@ -72,7 +73,7 @@ func EditConflictResponse(w http.ResponseWriter, r *http.Request, err error) {
 	if err != nil {
 		message = err.Error()
 	}
-	errorResponseDefault(w, r, http.StatusConflict, message)
+	errorResponse(w, r, http.StatusConflict, message, nil, ERROR_UNIQUE)
 }
 
 func InvalidAuthenticateResponse(w http.ResponseWriter, r *http.Request, err error) {

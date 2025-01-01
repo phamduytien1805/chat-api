@@ -31,15 +31,12 @@ func ValidatorErrors(err error) map[string]string {
 	// Make error message for each invalid field.
 	for _, err := range err.(validator.ValidationErrors) {
 		// Get name of the field's struct.
-		structName := strings.Split(err.Namespace(), ".")[0]
+		// structName := strings.Split(err.Namespace(), ".")[0]
 		// --> first (0) element is the founded name
 
 		// Append error message to the map, where key is a field name,
 		// and value is an error description.
-		errFields[err.Field()] = fmt.Sprintf(
-			"failed '%s' tag check (value '%s' is not valid for %s struct)",
-			err.Tag(), err.Value(), structName,
-		)
+		errFields[err.Field()] = fmt.Sprintf("%s", err.Tag())
 	}
 
 	return errFields
