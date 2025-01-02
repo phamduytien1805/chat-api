@@ -35,7 +35,6 @@ func (gw *userRepoImpl) createUserWithCredential(ctx context.Context, userParams
 			EmailVerified: userParams.EmailVerified,
 		},
 		HashedCredential: userCredential.HashedPassword,
-		Salt:             userCredential.Salt,
 		AfterCreate: func(u db.User) error {
 			return afterCreateFn(mapToUser(u))
 		},
@@ -82,6 +81,5 @@ func mapToUser(u db.User) *User {
 func mapToUserCredential(uc db.UserCredential) *UserCredential {
 	return &UserCredential{
 		HashedPassword: uc.HashedPassword,
-		Salt:           uc.Salt,
 	}
 }

@@ -38,7 +38,7 @@ func (s *HttpServer) registerUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *HttpServer) authenticateUserBasic(w http.ResponseWriter, r *http.Request) {
-	basicAuthForm := user.BasicAuthForm{}
+	basicAuthForm := &user.BasicAuthForm{}
 	if err := render.DecodeJSON(r.Body, basicAuthForm); err != nil {
 		http_utils.BadRequestResponse(w, r, err)
 		return
@@ -49,7 +49,7 @@ func (s *HttpServer) authenticateUserBasic(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	userSession, err := s.userSvc.AuthenticateUserBasic(r.Context(), basicAuthForm)
+	userSession, err := s.userSvc.AuthenticateUserBasic(r.Context(), *basicAuthForm)
 	if err != nil {
 		if errors.Is(err, user.ErrorUserInvalidAuthenticate) {
 			http_utils.InvalidAuthenticateResponse(w, r, err)

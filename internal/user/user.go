@@ -54,8 +54,7 @@ func (s *UserSvcImpl) CreateUserWithCredential(ctx context.Context, form CreateU
 		Email:         form.Email,
 		EmailVerified: false,
 	}, &UserCredential{
-		HashedPassword: hashSaltCredential.Hash,
-		Salt:           hashSaltCredential.Salt,
+		HashedPassword: hashSaltCredential,
 	}, func(createdUser *User) error {
 		//TODO: add logic to send email verification
 		return nil
@@ -75,13 +74,14 @@ func (s *UserSvcImpl) AuthenticateUserBasic(ctx context.Context, form BasicAuthF
 		s.logger.Error("error getting user by email", "detail", err.Error())
 		return nil, ErrorUserInvalidAuthenticate
 	}
+
 	userCredential, err := s.repo.getUserCredentialByUserId(ctx, user.ID)
 	if err != nil {
 		s.logger.Error("error getting user credential", "detail", err.Error())
 		return nil, ErrorUserInvalidAuthenticate
 	}
 
-	if err = s.hashGen.Compare(userCredential.HashedPassword, userCredential.Salt, form.Credential); err != nil {
+	if err = s.hashGen.Compare(userCredential.HashedPassword, form.Credential); err != nil {
 		return nil, ErrorUserInvalidAuthenticate
 	}
 

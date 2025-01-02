@@ -5,7 +5,6 @@ import "context"
 type CreateUserWithCredentialTxParams struct {
 	CreateUserParams
 	HashedCredential string
-	Salt             string
 	AfterCreate      func(User) error
 }
 
@@ -26,7 +25,6 @@ func (store *SQLStore) CreateUserWithCredentialTx(ctx context.Context, arg Creat
 		_, err = q.CreateUserCredential(ctx, CreateUserCredentialParams{
 			UserID:         result.User.ID,
 			HashedPassword: arg.HashedCredential,
-			Salt:           arg.Salt,
 		})
 		if err != nil {
 			return err

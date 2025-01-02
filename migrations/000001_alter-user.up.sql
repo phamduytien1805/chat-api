@@ -8,8 +8,7 @@ CREATE TABLE "users" (
 
 CREATE TABLE "user_credentials" (
   "user_id" uuid NOT NULL,
-  "hashed_password" varchar NOT NULL,
-  "salt" varchar NOT NULL
+  "hashed_password" varchar NOT NULL
 );
 
 

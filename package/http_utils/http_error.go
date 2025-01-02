@@ -81,5 +81,5 @@ func InvalidAuthenticateResponse(w http.ResponseWriter, r *http.Request, err err
 	if err != nil {
 		message = err.Error()
 	}
-	errorResponseDefault(w, r, http.StatusUnauthorized, message)
+	errorResponse(w, r, http.StatusUnauthorized, message, nil, ERROR_AUTHENTICATION)
 }

@@ -11,10 +11,9 @@ INSERT INTO users (
 -- name: CreateUserCredential :one
 INSERT INTO user_credentials (
   user_id,
-  hashed_password,
-  salt
+  hashed_password
 ) VALUES (
-  $1, $2, $3
+  $1, $2
 ) RETURNING *;
 
 
