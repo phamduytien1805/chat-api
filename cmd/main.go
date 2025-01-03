@@ -65,7 +65,7 @@ func initServer() (*server.Server, error) {
 		return nil, err
 	}
 	userSvc := user.NewUserServiceImpl(store, tokenMaker, configConfig, logger, hashGen)
-	httpServer := handlers.NewHttpServer(configConfig, logger, validator, userSvc)
+	httpServer := handlers.NewHttpServer(configConfig, logger, validator, tokenMaker, userSvc)
 	router := handlers.NewRouter(httpServer)
 
 	infraCloser := &InfraStruct{

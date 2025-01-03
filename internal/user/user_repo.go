@@ -13,6 +13,7 @@ import (
 type userRepo interface {
 	createUserWithCredential(ctx context.Context, userParams *User, userCredential *UserCredential, afterCreateFn func(*User) error) (*User, error)
 	getUserByEmail(ctx context.Context, email string) (*User, error)
+	getUserById(ctx context.Context, userID uuid.UUID) (*User, error)
 	getUserCredentialByUserId(ctx context.Context, userID uuid.UUID) (*UserCredential, error)
 }
 
@@ -67,6 +68,14 @@ func (gw *userRepoImpl) getUserCredentialByUserId(ctx context.Context, userID uu
 		return nil, err
 	}
 	return mapToUserCredential(uc), nil
+}
+
+func (gw *userRepoImpl) getUserById(ctx context.Context, userID uuid.UUID) (*User, error) {
+	user, err := gw.store.GetUserById(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	return mapToUser(user), nil
 }
 
 func mapToUser(u db.User) *User {

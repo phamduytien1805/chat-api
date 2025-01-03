@@ -12,8 +12,9 @@ import (
 )
 
 type UserSvc interface {
-	CreateUserWithCredential(ctx context.Context, form CreateUserForm) (*User, error)
+	CreateUserWithCredential(ctx context.Context, form CreateUserForm) (*UserSession, error)
 	AuthenticateUserBasic(ctx context.Context, form BasicAuthForm) (*UserSession, error)
+	GetUserById(ctx context.Context, userID uuid.UUID) (*User, error)
 }
 
 type UserSvcImpl struct {
@@ -34,7 +35,7 @@ func NewUserServiceImpl(store db.Store, tokenMaker token.Maker, config *config.C
 	}
 }
 
-func (s *UserSvcImpl) CreateUserWithCredential(ctx context.Context, form CreateUserForm) (*User, error) {
+func (s *UserSvcImpl) CreateUserWithCredential(ctx context.Context, form CreateUserForm) (*UserSession, error) {
 	ID, err := uuid.NewV7()
 
 	if err != nil {
@@ -64,8 +65,35 @@ func (s *UserSvcImpl) CreateUserWithCredential(ctx context.Context, form CreateU
 		return nil, err
 	}
 
-	return createdUser, nil
+	accessToken, accessPayload, err := s.tokenMaker.CreateToken(
+		createdUser.ID,
+		createdUser.Username,
+		createdUser.Email,
+		createdUser.EmailVerified,
+		s.config.Token.AccessTokenDuration,
+	)
+	if err != nil {
+		return nil, err
+	}
 
+	refreshToken, refreshPayload, err := s.tokenMaker.CreateToken(
+		createdUser.ID,
+		createdUser.Username,
+		createdUser.Email,
+		createdUser.EmailVerified,
+		s.config.Token.RefreshTokenDuration,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &UserSession{
+		AccessToken:           accessToken,
+		AccessTokenExpiresAt:  accessPayload.ExpiredAt,
+		RefreshToken:          refreshToken,
+		RefreshTokenExpiresAt: refreshPayload.ExpiredAt,
+		User:                  *createdUser,
+	}, nil
 }
 
 func (s *UserSvcImpl) AuthenticateUserBasic(ctx context.Context, form BasicAuthForm) (*UserSession, error) {
@@ -86,7 +114,10 @@ func (s *UserSvcImpl) AuthenticateUserBasic(ctx context.Context, form BasicAuthF
 	}
 
 	accessToken, accessPayload, err := s.tokenMaker.CreateToken(
+		user.ID,
 		user.Username,
+		user.Email,
+		user.EmailVerified,
 		s.config.Token.AccessTokenDuration,
 	)
 	if err != nil {
@@ -94,7 +125,10 @@ func (s *UserSvcImpl) AuthenticateUserBasic(ctx context.Context, form BasicAuthF
 	}
 
 	refreshToken, refreshPayload, err := s.tokenMaker.CreateToken(
+		user.ID,
 		user.Username,
+		user.Email,
+		user.EmailVerified,
 		s.config.Token.RefreshTokenDuration,
 	)
 	if err != nil {
@@ -108,4 +142,14 @@ func (s *UserSvcImpl) AuthenticateUserBasic(ctx context.Context, form BasicAuthF
 		RefreshTokenExpiresAt: refreshPayload.ExpiredAt,
 		User:                  *user,
 	}, nil
+}
+
+func (s *UserSvcImpl) GetUserById(ctx context.Context, userID uuid.UUID) (*User, error) {
+	user, err := s.repo.getUserById(ctx, userID)
+	if err != nil {
+		s.logger.Error("error getting user by id", "detail", err.Error())
+		return nil, err
+	}
+
+	return user, nil
 }
