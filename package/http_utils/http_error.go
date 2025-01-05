@@ -83,3 +83,11 @@ func InvalidAuthenticateResponse(w http.ResponseWriter, r *http.Request, err err
 	}
 	errorResponse(w, r, http.StatusUnauthorized, message, nil, ERROR_AUTHENTICATION)
 }
+
+func TokenExpired(w http.ResponseWriter, r *http.Request, err error) {
+	message := "Token is expired"
+	if err != nil {
+		message = err.Error()
+	}
+	errorResponse(w, r, http.StatusUnauthorized, message, nil, ERROR_TOKEN_EXPIRED)
+}

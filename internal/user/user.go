@@ -8,34 +8,31 @@ import (
 	"github.com/phamduytien1805/internal/platform/db"
 	"github.com/phamduytien1805/package/config"
 	"github.com/phamduytien1805/package/hash_generator"
-	"github.com/phamduytien1805/package/token"
 )
 
 type UserSvc interface {
-	CreateUserWithCredential(ctx context.Context, form CreateUserForm) (*UserSession, error)
-	AuthenticateUserBasic(ctx context.Context, form BasicAuthForm) (*UserSession, error)
+	CreateUserWithCredential(ctx context.Context, form CreateUserForm) (*User, error)
+	AuthenticateUserBasic(ctx context.Context, form BasicAuthForm) (*User, error)
 	GetUserById(ctx context.Context, userID uuid.UUID) (*User, error)
 }
 
 type UserSvcImpl struct {
-	logger     *slog.Logger
-	hashGen    *hash_generator.Argon2idHash
-	tokenMaker token.Maker
-	config     *config.Config
-	repo       userRepo
+	logger  *slog.Logger
+	hashGen *hash_generator.Argon2idHash
+	config  *config.Config
+	repo    userRepo
 }
 
-func NewUserServiceImpl(store db.Store, tokenMaker token.Maker, config *config.Config, logger *slog.Logger, hashGen *hash_generator.Argon2idHash) UserSvc {
+func NewUserServiceImpl(store db.Store, config *config.Config, logger *slog.Logger, hashGen *hash_generator.Argon2idHash) UserSvc {
 	return &UserSvcImpl{
-		logger:     logger,
-		hashGen:    hashGen,
-		tokenMaker: tokenMaker,
-		config:     config,
-		repo:       newUserGatewayImpl(store),
+		logger:  logger,
+		hashGen: hashGen,
+		config:  config,
+		repo:    newUserGatewayImpl(store),
 	}
 }
 
-func (s *UserSvcImpl) CreateUserWithCredential(ctx context.Context, form CreateUserForm) (*UserSession, error) {
+func (s *UserSvcImpl) CreateUserWithCredential(ctx context.Context, form CreateUserForm) (*User, error) {
 	ID, err := uuid.NewV7()
 
 	if err != nil {
@@ -65,38 +62,10 @@ func (s *UserSvcImpl) CreateUserWithCredential(ctx context.Context, form CreateU
 		return nil, err
 	}
 
-	accessToken, accessPayload, err := s.tokenMaker.CreateToken(
-		createdUser.ID,
-		createdUser.Username,
-		createdUser.Email,
-		createdUser.EmailVerified,
-		s.config.Token.AccessTokenDuration,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	refreshToken, refreshPayload, err := s.tokenMaker.CreateToken(
-		createdUser.ID,
-		createdUser.Username,
-		createdUser.Email,
-		createdUser.EmailVerified,
-		s.config.Token.RefreshTokenDuration,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return &UserSession{
-		AccessToken:           accessToken,
-		AccessTokenExpiresAt:  accessPayload.ExpiredAt,
-		RefreshToken:          refreshToken,
-		RefreshTokenExpiresAt: refreshPayload.ExpiredAt,
-		User:                  *createdUser,
-	}, nil
+	return createdUser, nil
 }
 
-func (s *UserSvcImpl) AuthenticateUserBasic(ctx context.Context, form BasicAuthForm) (*UserSession, error) {
+func (s *UserSvcImpl) AuthenticateUserBasic(ctx context.Context, form BasicAuthForm) (*User, error) {
 	user, err := s.repo.getUserByEmail(ctx, form.Email)
 	if err != nil {
 		s.logger.Error("error getting user by email", "detail", err.Error())
@@ -113,35 +82,7 @@ func (s *UserSvcImpl) AuthenticateUserBasic(ctx context.Context, form BasicAuthF
 		return nil, ErrorUserInvalidAuthenticate
 	}
 
-	accessToken, accessPayload, err := s.tokenMaker.CreateToken(
-		user.ID,
-		user.Username,
-		user.Email,
-		user.EmailVerified,
-		s.config.Token.AccessTokenDuration,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	refreshToken, refreshPayload, err := s.tokenMaker.CreateToken(
-		user.ID,
-		user.Username,
-		user.Email,
-		user.EmailVerified,
-		s.config.Token.RefreshTokenDuration,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return &UserSession{
-		AccessToken:           accessToken,
-		AccessTokenExpiresAt:  accessPayload.ExpiredAt,
-		RefreshToken:          refreshToken,
-		RefreshTokenExpiresAt: refreshPayload.ExpiredAt,
-		User:                  *user,
-	}, nil
+	return user, nil
 }
 
 func (s *UserSvcImpl) GetUserById(ctx context.Context, userID uuid.UUID) (*User, error) {

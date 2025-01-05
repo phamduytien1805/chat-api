@@ -64,7 +64,7 @@ func initServer() (*server.Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	userSvc := user.NewUserServiceImpl(store, tokenMaker, configConfig, logger, hashGen)
+	userSvc := user.NewUserServiceImpl(store, configConfig, logger, hashGen)
 	httpServer := handlers.NewHttpServer(configConfig, logger, validator, tokenMaker, userSvc)
 	router := handlers.NewRouter(httpServer)
 
