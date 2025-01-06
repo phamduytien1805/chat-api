@@ -2,10 +2,12 @@ package handlers
 
 import (
 	"context"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/phamduytien1805/internal/user"
 	"github.com/phamduytien1805/package/http_utils"
@@ -18,6 +20,8 @@ type UserSession struct {
 }
 
 type contextKey string
+
+var blacklistKeyFormat = "invalid_rftoken:%x"
 
 const (
 	authorizationHeaderKey  = "Authorization"
@@ -90,7 +94,7 @@ func (s *HttpServer) authenticateUserBasic(w http.ResponseWriter, r *http.Reques
 	authUser, err := s.userSvc.AuthenticateUserBasic(r.Context(), req)
 	if err != nil {
 		if errors.Is(err, user.ErrorUserInvalidAuthenticate) {
-			http_utils.InvalidAuthenticateResponse(w, r, err)
+			http_utils.UnauthorizedResponse(w, r, err)
 			return
 		}
 		http_utils.ServerErrorResponse(w, r, err)
@@ -104,14 +108,34 @@ func (s *HttpServer) authenticateUserBasic(w http.ResponseWriter, r *http.Reques
 func (s *HttpServer) refreshToken(w http.ResponseWriter, r *http.Request) {
 	refreshCookie, err := r.Cookie(authorizationRefreshKey)
 	if err != nil {
-		http_utils.InvalidAuthenticateResponse(w, r, errors.New("refresh token is not provided"))
+		http_utils.BadRequestResponse(w, r, errors.New("refresh token is not provided"))
 		return
 	}
 
 	payload, err := s.tokenMaker.VerifyToken(refreshCookie.Value)
 	if err != nil {
-		http_utils.InvalidAuthenticateResponse(w, r, err)
+		http_utils.BadRequestResponse(w, r, err)
 		return
+	}
+
+	// invalidate the refresh token before rotation, if token is valid
+	if payload.ExpiredAt.After(time.Now()) {
+		hashedToken := sha256.Sum256([]byte(refreshCookie.Value))
+		blacklistKey := fmt.Sprintf(blacklistKeyFormat, hashedToken)
+
+		keyExist, err := s.redis.Exist(r.Context(), blacklistKey)
+		if err != nil {
+			http_utils.ServerErrorResponse(w, r, err)
+			return
+		}
+		if keyExist {
+			http_utils.BadRequestResponse(w, r, errors.New("refresh token is already used"))
+			return
+		}
+		if err := s.redis.SetTx(r.Context(), blacklistKey, 1, time.Until(payload.ExpiredAt)); err != nil {
+			http_utils.ServerErrorResponse(w, r, err)
+			return
+		}
 	}
 
 	authUser, err := s.userSvc.GetUserById(r.Context(), payload.UserID)
@@ -134,22 +158,13 @@ func (s *HttpServer) createAndSendTokens(w http.ResponseWriter, r *http.Request,
 		Name:     authorizationRefreshKey,
 		Value:    refreshToken,
 		HttpOnly: true,
-		Secure:   s.config.Env == "production",
-		SameSite: http.SameSiteNoneMode,
+		Secure:   true,
 	})
 
 	http_utils.Ok(w, r, http.StatusCreated, &UserSession{
 		User:        user,
 		AccessToken: accessToken,
 	})
-}
-
-func parseAuthorizationHeader(header string) (authType, token string, err error) {
-	fields := strings.Fields(header)
-	if len(fields) != 2 {
-		return "", "", errors.New("invalid authorization header format")
-	}
-	return fields[0], fields[1], nil
 }
 
 func (s *HttpServer) makeToken(user *user.User) (string, string, error) {
@@ -164,4 +179,12 @@ func (s *HttpServer) makeToken(user *user.User) (string, string, error) {
 	}
 
 	return accessToken, refreshToken, nil
+}
+
+func parseAuthorizationHeader(header string) (authType, token string, err error) {
+	fields := strings.Fields(header)
+	if len(fields) != 2 {
+		return "", "", errors.New("invalid authorization header format")
+	}
+	return fields[0], fields[1], nil
 }

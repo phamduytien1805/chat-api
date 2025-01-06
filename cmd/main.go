@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/phamduytien1805/cmd/handlers"
 	"github.com/phamduytien1805/internal/platform/db"
+	"github.com/phamduytien1805/internal/platform/redis_engine"
 	"github.com/phamduytien1805/internal/user"
 	"github.com/phamduytien1805/package/config"
 	"github.com/phamduytien1805/package/hash_generator"
@@ -58,6 +59,8 @@ func initServer() (*server.Server, error) {
 
 	store := db.NewStore(pgConn)
 
+	redisQuerier := redis_engine.NewRedis(configConfig)
+
 	validator := validator.New()
 	hashGen := hash_generator.NewArgon2idHash(configConfig)
 	tokenMaker, err := token.NewJWTMaker(configConfig.Token.SecretKey)
@@ -65,7 +68,7 @@ func initServer() (*server.Server, error) {
 		return nil, err
 	}
 	userSvc := user.NewUserServiceImpl(store, configConfig, logger, hashGen)
-	httpServer := handlers.NewHttpServer(configConfig, logger, validator, tokenMaker, userSvc)
+	httpServer := handlers.NewHttpServer(configConfig, logger, validator, tokenMaker, userSvc, redisQuerier)
 	router := handlers.NewRouter(httpServer)
 
 	infraCloser := &InfraStruct{

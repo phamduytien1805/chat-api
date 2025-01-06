@@ -7,12 +7,20 @@ import (
 )
 
 type Config struct {
-	Env   string       `mapstructure:"env"`
-	Web   *WebConfig   `mapstructure:"web"`
-	DB    *DBConfig    `mapstructure:"db"`
-	Hash  *HashConfig  `mapstructure:"hash"`
-	Token *TokenConfig `mapstructure:"token"`
-	Kafka *KafkaConfig `mapstructure:"kafka"`
+	Env    string        `mapstructure:"env"`
+	Web    *WebConfig    `mapstructure:"web"`
+	DB     *DBConfig     `mapstructure:"db"`
+	Hash   *HashConfig   `mapstructure:"hash"`
+	Token  *TokenConfig  `mapstructure:"token"`
+	Kafka  *KafkaConfig  `mapstructure:"kafka"`
+	Redis  *RedisConfig  `mapstructure:"redis"`
+	Common *CommonConfig `mapstructure:"common"`
+}
+
+type CommonConfig struct {
+	Mail struct {
+		Expired time.Duration
+	}
 }
 
 type WebConfig struct {
@@ -52,7 +60,16 @@ type KafkaConfig struct {
 	Brokers []string
 }
 
+type RedisConfig struct {
+	Addr     string
+	Password string
+	DB       int
+}
+
 func setDefault() {
+
+	viper.SetDefault("common.mail.expired", 15*time.Minute)
+
 	viper.SetDefault("web.http.server.port", 5001)
 	viper.SetDefault("web.http.ws.port", 5002)
 	viper.SetDefault("env", "development")
@@ -64,12 +81,15 @@ func setDefault() {
 	viper.SetDefault("hash.keyLen", 256)
 	viper.SetDefault("hash.saltLen", 10)
 
-	viper.SetDefault("token.accessTokenDuration", "15m")
-	viper.SetDefault("token.refreshTokenDuration", "48h")
+	viper.SetDefault("token.accessTokenDuration", "5m")
+	viper.SetDefault("token.refreshTokenDuration", "24h")
 	viper.SetDefault("token.secretKey", "secret_secret_secret_secret_secret_secret_secret_secret")
 
 	viper.SetDefault("kafka.brokers", []string{"localhost:9092"})
 
+	viper.SetDefault("redis.addr", "localhost:6379")
+	viper.SetDefault("redis.password", "")
+	viper.SetDefault("redis.db", 0)
 }
 
 func NewConfig() (*Config, error) {

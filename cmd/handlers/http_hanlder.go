@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/cors"
+	"github.com/phamduytien1805/internal/platform/redis_engine"
 	"github.com/phamduytien1805/internal/user"
 	"github.com/phamduytien1805/package/config"
 	"github.com/phamduytien1805/package/http_utils"
@@ -25,9 +26,10 @@ type HttpServer struct {
 	router     *chi.Mux
 	userSvc    user.UserSvc
 	tokenMaker token.Maker
+	redis      redis_engine.RedisQuerier
 }
 
-func NewHttpServer(config *config.Config, logger *slog.Logger, validator *validator.Validate, tokenMaker token.Maker, userSvc user.UserSvc) *HttpServer {
+func NewHttpServer(config *config.Config, logger *slog.Logger, validator *validator.Validate, tokenMaker token.Maker, userSvc user.UserSvc, redis redis_engine.RedisQuerier) *HttpServer {
 	return &HttpServer{
 		config:     config,
 		logger:     logger,
@@ -35,6 +37,7 @@ func NewHttpServer(config *config.Config, logger *slog.Logger, validator *valida
 		httpPort:   config.Web.Http.Server.Port,
 		userSvc:    userSvc,
 		tokenMaker: tokenMaker,
+		redis:      redis,
 	}
 }
 
@@ -45,11 +48,11 @@ func (s *HttpServer) RegisterRoutes() {
 	s.router.Use(middleware.Logger)
 	s.router.Use(middleware.Recoverer)
 	s.router.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"https://*", "http://*"},
+		AllowedOrigins:   []string{"https://*", "http://*"}, //NOTE: just for development purpose
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
-		AllowCredentials: false,
+		AllowCredentials: true,
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
 	}))
 	s.router.Use(middleware.Heartbeat("/ping"))

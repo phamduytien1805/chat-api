@@ -77,11 +77,11 @@ func EditConflictResponse(w http.ResponseWriter, r *http.Request, err error) {
 }
 
 func InvalidAuthenticateResponse(w http.ResponseWriter, r *http.Request, err error) {
-	message := "Fail to authenticate user"
+	message := "Invalid or missing token"
 	if err != nil {
 		message = err.Error()
 	}
-	errorResponse(w, r, http.StatusUnauthorized, message, nil, ERROR_AUTHENTICATION)
+	errorResponseDefault(w, r, http.StatusUnauthorized, message)
 }
 
 func TokenExpired(w http.ResponseWriter, r *http.Request, err error) {
@@ -90,4 +90,12 @@ func TokenExpired(w http.ResponseWriter, r *http.Request, err error) {
 		message = err.Error()
 	}
 	errorResponse(w, r, http.StatusUnauthorized, message, nil, ERROR_TOKEN_EXPIRED)
+}
+
+func UnauthorizedResponse(w http.ResponseWriter, r *http.Request, err error) {
+	message := "Fail to authenticate user"
+	if err != nil {
+		message = err.Error()
+	}
+	errorResponse(w, r, http.StatusForbidden, message, nil, ERROR_AUTHENTICATION)
 }
