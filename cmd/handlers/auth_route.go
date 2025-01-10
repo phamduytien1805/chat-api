@@ -81,7 +81,7 @@ func (s *HttpServer) registerUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http_utils.Ok(w, r, http.StatusCreated, createdUser)
+	s.createAndSendTokens(w, r, http.StatusCreated, createdUser)
 }
 
 // Authenticate a user using basic credentials
@@ -101,7 +101,7 @@ func (s *HttpServer) authenticateUserBasic(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	s.createAndSendTokens(w, r, authUser)
+	s.createAndSendTokens(w, r, http.StatusOK, authUser)
 }
 
 // Refresh the access token using the refresh token
@@ -144,10 +144,10 @@ func (s *HttpServer) refreshToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.createAndSendTokens(w, r, authUser)
+	s.createAndSendTokens(w, r, http.StatusOK, authUser)
 }
 
-func (s *HttpServer) createAndSendTokens(w http.ResponseWriter, r *http.Request, user *user.User) {
+func (s *HttpServer) createAndSendTokens(w http.ResponseWriter, r *http.Request, statusCode int, user *user.User) {
 	accessToken, refreshToken, err := s.makeToken(user)
 	if err != nil {
 		http_utils.ServerErrorResponse(w, r, err)
@@ -161,7 +161,7 @@ func (s *HttpServer) createAndSendTokens(w http.ResponseWriter, r *http.Request,
 		Secure:   true,
 	})
 
-	http_utils.Ok(w, r, http.StatusCreated, &UserSession{
+	http_utils.Ok(w, r, statusCode, &UserSession{
 		User:        user,
 		AccessToken: accessToken,
 	})
