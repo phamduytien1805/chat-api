@@ -11,7 +11,7 @@ import (
 )
 
 type userRepo interface {
-	createUserWithCredential(ctx context.Context, userParams *User, userCredential *UserCredential, afterCreateFn func(*User) error) (*User, error)
+	createUserWithCredential(ctx context.Context, userParams *User, userCredential *UserCredential) (*User, error)
 	getUserByEmail(ctx context.Context, email string) (*User, error)
 	getUserById(ctx context.Context, userID uuid.UUID) (*User, error)
 	getUserCredentialByUserId(ctx context.Context, userID uuid.UUID) (*UserCredential, error)
@@ -27,7 +27,7 @@ func newUserGatewayImpl(store db.Store) userRepo {
 	}
 }
 
-func (gw *userRepoImpl) createUserWithCredential(ctx context.Context, userParams *User, userCredential *UserCredential, afterCreateFn func(*User) error) (*User, error) {
+func (gw *userRepoImpl) createUserWithCredential(ctx context.Context, userParams *User, userCredential *UserCredential) (*User, error) {
 	arg := db.CreateUserWithCredentialTxParams{
 		CreateUserParams: db.CreateUserParams{
 			ID:            userParams.ID,
@@ -36,9 +36,6 @@ func (gw *userRepoImpl) createUserWithCredential(ctx context.Context, userParams
 			EmailVerified: userParams.EmailVerified,
 		},
 		HashedCredential: userCredential.HashedPassword,
-		AfterCreate: func(u db.User) error {
-			return afterCreateFn(mapToUser(u))
-		},
 	}
 	txResult, err := gw.store.CreateUserWithCredentialTx(ctx, arg)
 	if err != nil {

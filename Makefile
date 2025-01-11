@@ -35,5 +35,5 @@ new_migration:
 sqlc:
 	sqlc generate
 
-api:
-	go run cmd/main.go
+api-dev:
+	go run ./cmd -config=configs/config.dev.yaml

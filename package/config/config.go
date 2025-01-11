@@ -15,6 +15,7 @@ type Config struct {
 	Kafka  *KafkaConfig  `mapstructure:"kafka"`
 	Redis  *RedisConfig  `mapstructure:"redis"`
 	Common *CommonConfig `mapstructure:"common"`
+	Mail   *MailConfig   `mapstructure:"mail"`
 }
 
 type CommonConfig struct {
@@ -26,7 +27,8 @@ type CommonConfig struct {
 type WebConfig struct {
 	Http struct {
 		Server struct {
-			Port string
+			Port           string
+			VerifyEmailUrl string
 		}
 		WS struct {
 			Port string
@@ -66,6 +68,14 @@ type RedisConfig struct {
 	DB       int
 }
 
+type MailConfig struct {
+	Host     string
+	Port     int
+	Username string
+	Password string
+	Origin   string
+}
+
 func setDefault() {
 
 	viper.SetDefault("common.mail.expired", 15*time.Minute)
@@ -90,6 +100,11 @@ func setDefault() {
 	viper.SetDefault("redis.addr", "localhost:6379")
 	viper.SetDefault("redis.password", "")
 	viper.SetDefault("redis.db", 0)
+
+	viper.SetDefault("mail.host", "smtp.gmail.com")
+	viper.SetDefault("mail.port", 587)
+	viper.SetDefault("mail.username", "")
+	viper.SetDefault("mail.password", "")
 }
 
 func NewConfig() (*Config, error) {

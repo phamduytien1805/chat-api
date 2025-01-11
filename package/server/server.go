@@ -15,6 +15,12 @@ type HttpServer interface {
 	GracefulStop(ctx context.Context) error
 }
 
+type TaskQServer interface {
+	RegisterHandlers()
+	Run()
+	GracefulStop(ctx context.Context) error
+}
+
 type GrpcServer interface {
 	Register()
 	Run()

@@ -53,9 +53,6 @@ func (s *UserSvcImpl) CreateUserWithCredential(ctx context.Context, form CreateU
 		EmailVerified: false,
 	}, &UserCredential{
 		HashedPassword: hashSaltCredential,
-	}, func(createdUser *User) error {
-		//TODO: add logic to send email verification
-		return nil
 	})
 
 	if err != nil {

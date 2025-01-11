@@ -9,11 +9,10 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/cors"
-	"github.com/phamduytien1805/internal/platform/redis_engine"
+	"github.com/phamduytien1805/internal/auth"
 	"github.com/phamduytien1805/internal/user"
 	"github.com/phamduytien1805/package/config"
 	"github.com/phamduytien1805/package/http_utils"
-	"github.com/phamduytien1805/package/token"
 	"github.com/phamduytien1805/package/validator"
 )
 
@@ -25,19 +24,17 @@ type HttpServer struct {
 	httpPort   string
 	router     *chi.Mux
 	userSvc    user.UserSvc
-	tokenMaker token.Maker
-	redis      redis_engine.RedisQuerier
+	authSvc    auth.AuthService
 }
 
-func NewHttpServer(config *config.Config, logger *slog.Logger, validator *validator.Validate, tokenMaker token.Maker, userSvc user.UserSvc, redis redis_engine.RedisQuerier) *HttpServer {
+func NewHttpServer(config *config.Config, logger *slog.Logger, validator *validator.Validate, authSvc auth.AuthService, userSvc user.UserSvc) *HttpServer {
 	return &HttpServer{
-		config:     config,
-		logger:     logger,
-		validator:  validator,
-		httpPort:   config.Web.Http.Server.Port,
-		userSvc:    userSvc,
-		tokenMaker: tokenMaker,
-		redis:      redis,
+		config:    config,
+		logger:    logger,
+		validator: validator,
+		httpPort:  config.Web.Http.Server.Port,
+		userSvc:   userSvc,
+		authSvc:   authSvc,
 	}
 }
 

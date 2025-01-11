@@ -5,7 +5,6 @@ import "context"
 type CreateUserWithCredentialTxParams struct {
 	CreateUserParams
 	HashedCredential string
-	AfterCreate      func(User) error
 }
 
 type CreateUserWithCredentialTxResult struct {
@@ -30,7 +29,7 @@ func (store *SQLStore) CreateUserWithCredentialTx(ctx context.Context, arg Creat
 			return err
 		}
 
-		return arg.AfterCreate(result.User)
+		return nil
 	})
 
 	return result, err

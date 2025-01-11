@@ -1,0 +1,32 @@
+enn: development
+web:
+  http:
+    server:
+      port: 5001
+      addr: http://localhost:5001
+
+db:
+  source: postgresql://root:secret@localhost:5432/core?sslmode=disable
+
+hash:
+  time: 1
+  memory: 65536
+  threads: 32
+  keyLen: 256
+  saltLen: 10
+
+token:
+  accessTokenDuration: 15m
+  refreshTokenDuration: 24h
+  secretKey: secret_secret_secret_secret_secret_secret_secret_secret
+
+redis:
+  addr: localhost:6379
+  password: 
+  db: 0
+
+mail:
+  host: example.smtp.example.io
+  port: 587
+  username: example@example.io
+  password: example
