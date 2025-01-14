@@ -6,6 +6,7 @@ import (
 
 	"github.com/phamduytien1805/internal/user"
 	"github.com/phamduytien1805/package/http_utils"
+	"github.com/phamduytien1805/package/token"
 )
 
 type UserSession struct {
@@ -30,6 +31,8 @@ func (s *HttpServer) registerUser(w http.ResponseWriter, r *http.Request) {
 		http_utils.ServerErrorResponse(w, r, err)
 		return
 	}
+
+	s.authSvc.SendEmailAsync(r.Context(), createdUser.Email)
 
 	s.createAndSendTokens(w, r, http.StatusCreated, createdUser)
 }
@@ -100,4 +103,27 @@ func (s *HttpServer) createAndSendTokens(w http.ResponseWriter, r *http.Request,
 		User:        user,
 		AccessToken: accessToken,
 	})
+}
+
+func (s *HttpServer) resendEmailVerification(w http.ResponseWriter, r *http.Request) {
+	tokenPayload := r.Context().Value(authorizationPayloadKey).(token.Payload)
+
+	user, err := s.userSvc.GetUserById(r.Context(), tokenPayload.UserID)
+	if err != nil {
+		http_utils.ServerErrorResponse(w, r, err)
+		return
+	}
+
+	if user.EmailVerified {
+		http_utils.EmailVerifiedResponse(w, r, errors.New("email already verified"))
+		return
+	}
+
+	err = s.authSvc.SendEmailAsync(r.Context(), user.Email)
+	if err != nil {
+		http_utils.ServerErrorResponse(w, r, err)
+		return
+	}
+
+	http_utils.Ok(w, r, http.StatusOK, nil)
 }

@@ -36,7 +36,9 @@ type AuthServiceImpl struct {
 
 	accessTokenDuration  time.Duration
 	refreshTokenDuration time.Duration
+	emailDuration        time.Duration
 	verifyLink           string
+	redirectLink         string
 }
 
 func NewAuthService(config *config.Config, logger *slog.Logger, tokenMaker token.Maker, taskqProducer taskq.TaskProducer, redis redis_engine.RedisQuerier) AuthService {
@@ -47,7 +49,10 @@ func NewAuthService(config *config.Config, logger *slog.Logger, tokenMaker token
 		taskq:                taskqProducer,
 		accessTokenDuration:  config.Token.AccessTokenDuration,
 		refreshTokenDuration: config.Token.RefreshTokenDuration,
-		verifyLink:           config.Web.Http.Server.VerifyEmailUrl}
+		emailDuration:        config.Mail.Expired,
+		verifyLink:           config.Web.Http.Server.VerifyEmailUrl,
+		redirectLink:         config.Web.Http.Server.FrontEndUrl,
+	}
 }
 
 func (a *AuthServiceImpl) VerifyAccessToken(ctx context.Context, tokenString string) (*token.Payload, error) {
@@ -87,6 +92,27 @@ func (a *AuthServiceImpl) CreateRefreshTokens(ctx context.Context, userID uuid.U
 	return rfToken, nil
 }
 
+func (a *AuthServiceImpl) SendEmailAsync(ctx context.Context, userEmail string) error {
+	token, err := uuid.NewRandom()
+	if err != nil {
+		a.logger.Error("failed to generate uuid SendEmailAsync", "detail", err.Error())
+		return err
+	}
+	verifyKey := fmt.Sprintf("%s:%s", emailVerificationKey, token)
+	if err := a.redis.SetTx(ctx, verifyKey, userEmail, a.emailDuration); err != nil {
+		a.logger.Error("failed to set verifyKey", "detail", err.Error())
+		return err
+	}
+	payload := mail.SendMailParams{
+		To:         userEmail,
+		VerifyLink: fmt.Sprintf("%s?token=%s&redirect_url=%s", a.verifyLink, token, a.redirectLink),
+	}
+	if err := a.taskq.EnqueueSendMailTask(ctx, payload); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (a *AuthServiceImpl) invalidateRefreshTokenIfNeeded(ctx context.Context, tokenString string, tokenExpiredAt time.Time) error {
 	hashedToken := sha256.Sum256([]byte(tokenString))
 	blacklistKey := fmt.Sprintf("invalid_rftoken:%x", hashedToken)
@@ -99,23 +125,6 @@ func (a *AuthServiceImpl) invalidateRefreshTokenIfNeeded(ctx context.Context, to
 	}
 	// Invalidate the token
 	if err := a.redis.SetTx(ctx, blacklistKey, 1, time.Until(tokenExpiredAt)); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (a *AuthServiceImpl) SendEmailAsync(ctx context.Context, userEmail string) error {
-	token, err := uuid.NewRandom()
-	if err != nil {
-		a.logger.Error("failed to generate uuid SendEmailAsync", "detail", err.Error())
-		return err
-	}
-	verifyKey := fmt.Sprintf("%s:%s", emailVerificationKey, token)
-	payload := mail.SendMailParams{
-		To:         userEmail,
-		VerifyLink: fmt.Sprintf("%s?token=%s", a.verifyLink, verifyKey),
-	}
-	if err := a.taskq.EnqueueSendMailTask(ctx, payload); err != nil {
 		return err
 	}
 	return nil

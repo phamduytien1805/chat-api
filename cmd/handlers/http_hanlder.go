@@ -62,6 +62,9 @@ func (s *HttpServer) RegisterRoutes() {
 			r.Post("/login", s.authenticateUserBasic)
 			r.Post("/register", s.registerUser)
 			r.Post("/token", s.refreshToken)
+
+			r.Use(s.authenticator)
+			r.Post("/resend-verification", s.resendEmailVerification)
 		})
 	})
 	s.router.Route("/user", func(r chi.Router) {

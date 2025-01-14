@@ -99,3 +99,11 @@ func UnauthorizedResponse(w http.ResponseWriter, r *http.Request, err error) {
 	}
 	errorResponse(w, r, http.StatusForbidden, message, nil, ERROR_AUTHENTICATION)
 }
+
+func EmailVerifiedResponse(w http.ResponseWriter, r *http.Request, err error) {
+	message := "Email already verified"
+	if err != nil {
+		message = err.Error()
+	}
+	errorResponse(w, r, http.StatusBadRequest, message, nil, ERROR_EMAIL_ALREADY_VERIFIED)
+}

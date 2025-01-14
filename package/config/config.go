@@ -7,21 +7,14 @@ import (
 )
 
 type Config struct {
-	Env    string        `mapstructure:"env"`
-	Web    *WebConfig    `mapstructure:"web"`
-	DB     *DBConfig     `mapstructure:"db"`
-	Hash   *HashConfig   `mapstructure:"hash"`
-	Token  *TokenConfig  `mapstructure:"token"`
-	Kafka  *KafkaConfig  `mapstructure:"kafka"`
-	Redis  *RedisConfig  `mapstructure:"redis"`
-	Common *CommonConfig `mapstructure:"common"`
-	Mail   *MailConfig   `mapstructure:"mail"`
-}
-
-type CommonConfig struct {
-	Mail struct {
-		Expired time.Duration
-	}
+	Env   string       `mapstructure:"env"`
+	Web   *WebConfig   `mapstructure:"web"`
+	DB    *DBConfig    `mapstructure:"db"`
+	Hash  *HashConfig  `mapstructure:"hash"`
+	Token *TokenConfig `mapstructure:"token"`
+	Kafka *KafkaConfig `mapstructure:"kafka"`
+	Redis *RedisConfig `mapstructure:"redis"`
+	Mail  *MailConfig  `mapstructure:"mail"`
 }
 
 type WebConfig struct {
@@ -29,6 +22,7 @@ type WebConfig struct {
 		Server struct {
 			Port           string
 			VerifyEmailUrl string
+			FrontEndUrl    string
 		}
 		WS struct {
 			Port string
@@ -74,12 +68,10 @@ type MailConfig struct {
 	Username string
 	Password string
 	Origin   string
+	Expired  time.Duration
 }
 
 func setDefault() {
-
-	viper.SetDefault("common.mail.expired", 15*time.Minute)
-
 	viper.SetDefault("web.http.server.port", 5001)
 	viper.SetDefault("web.http.ws.port", 5002)
 	viper.SetDefault("env", "development")
@@ -105,6 +97,8 @@ func setDefault() {
 	viper.SetDefault("mail.port", 587)
 	viper.SetDefault("mail.username", "")
 	viper.SetDefault("mail.password", "")
+	viper.SetDefault("mail.expired", 15*time.Minute)
+
 }
 
 func NewConfig() (*Config, error) {
