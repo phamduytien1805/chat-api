@@ -125,5 +125,5 @@ func (s *HttpServer) resendEmailVerification(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	http_utils.Ok(w, r, http.StatusOK, nil)
+	http_utils.Ok(w, r, http.StatusOK, true)
 }

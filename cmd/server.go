@@ -17,14 +17,17 @@ import (
 	"github.com/phamduytien1805/package/server"
 	"github.com/phamduytien1805/package/token"
 	"github.com/phamduytien1805/package/validator"
+	"github.com/redis/go-redis/v9"
 )
 
 type InfraStruct struct {
-	pgConn *pgxpool.Pool
+	pgConn      *pgxpool.Pool
+	redisClient *redis.Client
 }
 
 func (i *InfraStruct) Close() error {
 	i.pgConn.Close()
+	i.redisClient.Close()
 	return nil
 }
 
@@ -43,6 +46,7 @@ func ServerBuilder() (*server.Server, error) {
 	store := db.NewStore(pgConn)
 
 	redisQuerier := redis_engine.NewRedis(configConfig)
+	redisStore := redis_engine.NewRedisStore(redisQuerier)
 
 	validator := validator.New()
 	hashGen := hash_generator.NewArgon2idHash(configConfig)
@@ -54,7 +58,7 @@ func ServerBuilder() (*server.Server, error) {
 	taskqProducer := taskq.NewTaskProducer(configConfig.Redis, logger)
 
 	mailSvc := mail.NewMailService(configConfig.Mail, logger)
-	authSvc := auth.NewAuthService(configConfig, logger, tokenMaker, taskqProducer, redisQuerier)
+	authSvc := auth.NewAuthService(configConfig, logger, tokenMaker, taskqProducer, redisStore)
 	userSvc := user.NewUserServiceImpl(store, configConfig, logger, hashGen)
 
 	taskqServer := taskq.NewTaskConsumer(configConfig.Redis, logger, mailSvc)
@@ -62,7 +66,8 @@ func ServerBuilder() (*server.Server, error) {
 	router := NewRouter(httpServer, taskqServer)
 
 	infraCloser := &InfraStruct{
-		pgConn: pgConn,
+		pgConn:      pgConn,
+		redisClient: redisQuerier,
 	}
 
 	return server.NewServer(router, infraCloser), nil
