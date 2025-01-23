@@ -61,6 +61,7 @@ func (s *HttpServer) RegisterRoutes() {
 		r.Group(func(r chi.Router) {
 			r.Post("/login", s.authenticateUserBasic)
 			r.Post("/register", s.registerUser)
+			r.Post("/logout", s.logout)
 			r.Post("/token", s.refreshToken)
 			r.Post("/verify-email", s.verifyEmail)
 			r.With(s.authenticator).Post("/resend-verification", s.resendEmailVerification)

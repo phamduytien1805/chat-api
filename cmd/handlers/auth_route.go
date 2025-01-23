@@ -58,6 +58,35 @@ func (s *HttpServer) authenticateUserBasic(w http.ResponseWriter, r *http.Reques
 	s.createAndSendTokens(w, r, http.StatusOK, authUser)
 }
 
+// Logout current session
+func (s *HttpServer) logout(w http.ResponseWriter, r *http.Request) {
+	refreshCookie, err := r.Cookie(authorizationRefreshKey)
+	if err != nil {
+		s.logger.Error("No cookies", "detail", err.Error())
+	}
+	if refreshCookie.Value == "" {
+		http_utils.Ok(w, r, http.StatusOK, true)
+		return
+	}
+
+	_, err = s.authSvc.RevokeUserRefreshToken(r.Context(), refreshCookie.Value)
+	if err != nil {
+		if !errors.Is(err, auth.ErrRevokedRefreshToken) {
+			http_utils.BadRequestResponse(w, r, err)
+			return
+		}
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     authorizationRefreshKey,
+		Value:    "",
+		HttpOnly: true,
+		Secure:   true,
+	})
+
+	http_utils.Ok(w, r, http.StatusOK, true)
+}
+
 // Refresh the access token using the refresh token
 func (s *HttpServer) refreshToken(w http.ResponseWriter, r *http.Request) {
 	refreshCookie, err := r.Cookie(authorizationRefreshKey)
@@ -66,13 +95,13 @@ func (s *HttpServer) refreshToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	payload, err := s.authSvc.VerifyRefreshToken(r.Context(), refreshCookie.Value)
+	revokedToken, err := s.authSvc.RevokeUserRefreshToken(r.Context(), refreshCookie.Value)
 	if err != nil {
 		http_utils.BadRequestResponse(w, r, err)
 		return
 	}
 
-	authUser, err := s.userSvc.GetUserById(r.Context(), payload.UserID)
+	authUser, err := s.userSvc.GetUserById(r.Context(), revokedToken.UserID)
 	if err != nil {
 		http_utils.ServerErrorResponse(w, r, err)
 		return

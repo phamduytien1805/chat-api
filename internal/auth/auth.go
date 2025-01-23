@@ -3,7 +3,6 @@ package auth
 import (
 	"context"
 	"crypto/sha256"
-	"errors"
 	"fmt"
 	"log/slog"
 	"time"
@@ -23,7 +22,7 @@ const (
 
 type AuthService interface {
 	VerifyAccessToken(ctx context.Context, tokenString string) (*token.Payload, error)
-	VerifyRefreshToken(ctx context.Context, tokenString string) (*token.Payload, error)
+	RevokeUserRefreshToken(ctx context.Context, tokenString string) (*token.Payload, error)
 	CreateAccessTokens(ctx context.Context, userID uuid.UUID, username string, email string) (string, error)
 	CreateRefreshTokens(ctx context.Context, userID uuid.UUID, username string, email string) (string, error)
 	SendEmailAsync(ctx context.Context, userEmail string) error
@@ -65,7 +64,7 @@ func (a *AuthServiceImpl) VerifyAccessToken(ctx context.Context, tokenString str
 	return payload, nil
 }
 
-func (a *AuthServiceImpl) VerifyRefreshToken(ctx context.Context, tokenString string) (*token.Payload, error) {
+func (a *AuthServiceImpl) RevokeUserRefreshToken(ctx context.Context, tokenString string) (*token.Payload, error) {
 	payload, err := a.tokenMaker.VerifyToken(tokenString)
 	if err != nil {
 		return nil, err
@@ -138,7 +137,7 @@ func (a *AuthServiceImpl) invalidateRefreshTokenIfNeeded(ctx context.Context, to
 		return err
 	}
 	if keyExist {
-		return errors.New("refresh token is already used")
+		return ErrRevokedRefreshToken
 	}
 	// Invalidate the token
 	if err := a.redis.SetTx(ctx, blacklistKey, 1, time.Until(tokenExpiredAt)); err != nil {
