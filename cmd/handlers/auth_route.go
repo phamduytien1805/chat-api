@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/phamduytien1805/internal/auth"
 	"github.com/phamduytien1805/internal/user"
 	"github.com/phamduytien1805/package/http_utils"
 	"github.com/phamduytien1805/package/token"
@@ -78,6 +79,24 @@ func (s *HttpServer) refreshToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.createAndSendTokens(w, r, http.StatusOK, authUser)
+}
+
+// Verify the email using the token
+func (s *HttpServer) verifyEmail(w http.ResponseWriter, r *http.Request) {
+	var req auth.EmailVerificationForm
+	if !s.decodeAndValidateRequest(w, r, &req) {
+		return
+	}
+
+	_, err := s.authSvc.VerifyEmail(r.Context(), req.Token)
+	if err != nil {
+		s.logger.Error(err.Error())
+		http_utils.BadRequestResponse(w, r, err)
+		return
+	}
+
+	http_utils.Ok(w, r, http.StatusOK, true)
+
 }
 
 func (s *HttpServer) createAndSendTokens(w http.ResponseWriter, r *http.Request, statusCode int, user *user.User) {

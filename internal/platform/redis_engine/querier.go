@@ -11,6 +11,7 @@ type RedisQuerier interface {
 	GetRaw(ctx context.Context, key string) (string, error)
 	Get(ctx context.Context, key string, val interface{}) error
 	Exist(ctx context.Context, key string) (bool, error)
+	Delete(ctx context.Context, key string) error
 }
 
 func (c *RedisStore) Set(ctx context.Context, key string, value interface{}) error {
@@ -31,4 +32,8 @@ func (c *RedisStore) Get(ctx context.Context, key string, val interface{}) error
 func (c *RedisStore) Exist(ctx context.Context, key string) (bool, error) {
 	val, err := c.client.Exists(ctx, key).Result()
 	return val != 0, err
+}
+
+func (c *RedisStore) Delete(ctx context.Context, key string) error {
+	return c.client.Del(ctx, key).Err()
 }

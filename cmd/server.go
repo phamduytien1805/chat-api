@@ -58,7 +58,7 @@ func ServerBuilder() (*server.Server, error) {
 	taskqProducer := taskq.NewTaskProducer(configConfig.Redis, logger)
 
 	mailSvc := mail.NewMailService(configConfig.Mail, logger)
-	authSvc := auth.NewAuthService(configConfig, logger, tokenMaker, taskqProducer, redisStore)
+	authSvc := auth.NewAuthService(configConfig, logger, tokenMaker, taskqProducer, redisStore, store)
 	userSvc := user.NewUserServiceImpl(store, configConfig, logger, hashGen)
 
 	taskqServer := taskq.NewTaskConsumer(configConfig.Redis, logger, mailSvc)

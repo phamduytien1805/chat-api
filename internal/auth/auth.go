@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/phamduytien1805/internal/platform/db"
 	"github.com/phamduytien1805/internal/platform/mail"
 	"github.com/phamduytien1805/internal/platform/redis_engine"
 	"github.com/phamduytien1805/internal/taskq"
@@ -26,6 +27,7 @@ type AuthService interface {
 	CreateAccessTokens(ctx context.Context, userID uuid.UUID, username string, email string) (string, error)
 	CreateRefreshTokens(ctx context.Context, userID uuid.UUID, username string, email string) (string, error)
 	SendEmailAsync(ctx context.Context, userEmail string) error
+	VerifyEmail(ctx context.Context, token string) (string, error)
 }
 
 type AuthServiceImpl struct {
@@ -33,25 +35,25 @@ type AuthServiceImpl struct {
 	redis      redis_engine.RedisQuerier
 	logger     *slog.Logger
 	taskq      taskq.TaskProducer
+	repo       authRepo
 
 	accessTokenDuration  time.Duration
 	refreshTokenDuration time.Duration
 	emailDuration        time.Duration
 	verifyLink           string
-	redirectLink         string
 }
 
-func NewAuthService(config *config.Config, logger *slog.Logger, tokenMaker token.Maker, taskqProducer taskq.TaskProducer, redis redis_engine.RedisQuerier) AuthService {
+func NewAuthService(config *config.Config, logger *slog.Logger, tokenMaker token.Maker, taskqProducer taskq.TaskProducer, redis redis_engine.RedisQuerier, store db.Store) AuthService {
 	return &AuthServiceImpl{
 		tokenMaker:           tokenMaker,
 		redis:                redis,
 		logger:               logger,
 		taskq:                taskqProducer,
+		repo:                 newAuthGatewayImpl(store),
 		accessTokenDuration:  config.Token.AccessTokenDuration,
 		refreshTokenDuration: config.Token.RefreshTokenDuration,
 		emailDuration:        config.Mail.Expired,
 		verifyLink:           config.Web.Http.Server.VerifyEmailUrl,
-		redirectLink:         config.Web.Http.Server.FrontEndUrl,
 	}
 }
 
@@ -105,12 +107,27 @@ func (a *AuthServiceImpl) SendEmailAsync(ctx context.Context, userEmail string) 
 	}
 	payload := mail.SendMailParams{
 		To:         userEmail,
-		VerifyLink: fmt.Sprintf("%s?token=%s&redirect_url=%s", a.verifyLink, token, a.redirectLink),
+		VerifyLink: fmt.Sprintf("%s?token=%s", a.verifyLink, token),
 	}
 	if err := a.taskq.EnqueueSendMailTask(ctx, payload); err != nil {
 		return err
 	}
 	return nil
+}
+
+func (a *AuthServiceImpl) VerifyEmail(ctx context.Context, token string) (string, error) {
+	verifyKey := fmt.Sprintf("%s:%s", emailVerificationKey, token)
+	userEmail, err := a.redis.GetRaw(ctx, verifyKey)
+	if err != nil {
+		return "", err
+	}
+	if err := a.redis.Delete(ctx, verifyKey); err != nil {
+		return "", err
+	}
+	if err := a.repo.verifyUserEmail(ctx, userEmail); err != nil {
+		return "", err
+	}
+	return userEmail, nil
 }
 
 func (a *AuthServiceImpl) invalidateRefreshTokenIfNeeded(ctx context.Context, tokenString string, tokenExpiredAt time.Time) error {

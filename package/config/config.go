@@ -22,7 +22,6 @@ type WebConfig struct {
 		Server struct {
 			Port           string
 			VerifyEmailUrl string
-			FrontEndUrl    string
 		}
 		WS struct {
 			Port string

@@ -16,6 +16,19 @@ INSERT INTO user_credentials (
   $1, $2
 ) RETURNING *;
 
+-- name: UpdateUser :one
+UPDATE users SET
+  username = COALESCE($2, username),
+  email = COALESCE($3, email),
+  email_verified = COALESCE($4, email_verified)
+WHERE id = $1 RETURNING *;
+
+-- name: UpdateUserByEmail :one
+UPDATE users SET
+  username = COALESCE($2, username),
+  email_verified = COALESCE($3, email_verified)
+WHERE email = $1 RETURNING *;
+
 
 -- name: GetUserById :one
 Select * from users where id = $1;
