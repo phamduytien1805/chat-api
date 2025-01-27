@@ -4,12 +4,14 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/gocql/gocql"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/phamduytien1805/cmd/handlers"
 	"github.com/phamduytien1805/internal/auth"
 	"github.com/phamduytien1805/internal/platform/db"
 	"github.com/phamduytien1805/internal/platform/mail"
 	"github.com/phamduytien1805/internal/platform/redis_engine"
+	"github.com/phamduytien1805/internal/platform/scylladb"
 	"github.com/phamduytien1805/internal/taskq"
 	"github.com/phamduytien1805/internal/user"
 	"github.com/phamduytien1805/package/config"
@@ -18,16 +20,19 @@ import (
 	"github.com/phamduytien1805/package/token"
 	"github.com/phamduytien1805/package/validator"
 	"github.com/redis/go-redis/v9"
+	"github.com/scylladb/gocqlx/v3"
 )
 
 type InfraStruct struct {
 	pgConn      *pgxpool.Pool
 	redisClient *redis.Client
+	cqlSession  *gocql.Session
 }
 
 func (i *InfraStruct) Close() error {
 	i.pgConn.Close()
 	i.redisClient.Close()
+	i.cqlSession.Close()
 	return nil
 }
 
@@ -37,6 +42,18 @@ func ServerBuilder() (*server.Server, error) {
 		return nil, err
 	}
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+
+	cluster := scylladb.NewClusterManager(configConfig.Scylla)
+	cqlSession, err := gocqlx.WrapSession(gocql.NewSession(*cluster.Cluster))
+	if err != nil {
+		return nil, err
+	}
+	logger.Info("ScyllaDB connected")
+	logger.Info("Running Scylla migration")
+	err = scylladb.RunMigration(logger, cqlSession)
+	if err != nil {
+		return nil, err
+	}
 
 	pgConn, err := db.NewPostgresql(configConfig)
 	if err != nil {
@@ -68,6 +85,7 @@ func ServerBuilder() (*server.Server, error) {
 	infraCloser := &InfraStruct{
 		pgConn:      pgConn,
 		redisClient: redisQuerier,
+		cqlSession:  cqlSession.Session,
 	}
 
 	return server.NewServer(router, infraCloser), nil

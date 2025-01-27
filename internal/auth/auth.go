@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/hibiken/asynq"
 	"github.com/phamduytien1805/internal/platform/db"
 	"github.com/phamduytien1805/internal/platform/mail"
 	"github.com/phamduytien1805/internal/platform/redis_engine"
@@ -108,7 +109,7 @@ func (a *AuthServiceImpl) SendEmailAsync(ctx context.Context, userEmail string) 
 		To:         userEmail,
 		VerifyLink: fmt.Sprintf("%s?token=%s", a.verifyLink, token),
 	}
-	if err := a.taskq.EnqueueSendMailTask(ctx, payload); err != nil {
+	if err := a.taskq.EnqueueSendMailTask(ctx, payload, asynq.MaxRetry(5)); err != nil {
 		return err
 	}
 	return nil

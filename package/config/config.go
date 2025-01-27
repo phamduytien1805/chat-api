@@ -7,14 +7,15 @@ import (
 )
 
 type Config struct {
-	Env   string       `mapstructure:"env"`
-	Web   *WebConfig   `mapstructure:"web"`
-	DB    *DBConfig    `mapstructure:"db"`
-	Hash  *HashConfig  `mapstructure:"hash"`
-	Token *TokenConfig `mapstructure:"token"`
-	Kafka *KafkaConfig `mapstructure:"kafka"`
-	Redis *RedisConfig `mapstructure:"redis"`
-	Mail  *MailConfig  `mapstructure:"mail"`
+	Env    string        `mapstructure:"env"`
+	Web    *WebConfig    `mapstructure:"web"`
+	DB     *DBConfig     `mapstructure:"db"`
+	Hash   *HashConfig   `mapstructure:"hash"`
+	Token  *TokenConfig  `mapstructure:"token"`
+	Kafka  *KafkaConfig  `mapstructure:"kafka"`
+	Redis  *RedisConfig  `mapstructure:"redis"`
+	Scylla *ScyllaConfig `mapstructure:"scylla"`
+	Mail   *MailConfig   `mapstructure:"mail"`
 }
 
 type WebConfig struct {
@@ -61,6 +62,13 @@ type RedisConfig struct {
 	DB       int
 }
 
+type ScyllaConfig struct {
+	Hosts             []string
+	Keyspace          string
+	Class             string
+	ReplicationFactor int
+}
+
 type MailConfig struct {
 	Host     string
 	Port     int
@@ -97,6 +105,11 @@ func setDefault() {
 	viper.SetDefault("mail.username", "")
 	viper.SetDefault("mail.password", "")
 	viper.SetDefault("mail.expired", 15*time.Minute)
+
+	viper.SetDefault("scylla.hosts", []string{"localhost:9042"})
+	viper.SetDefault("scylla.keyspace", "chatcore")
+	viper.SetDefault("scylla.class", "SimpleStrategy")
+	viper.SetDefault("scylla.replicationFactor", 2)
 
 }
 

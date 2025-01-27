@@ -11,6 +11,10 @@ postgres:
 redis:
 	docker run --name redis --network core-network -p 6379:6379 -d redis:7.4.1
 
+scylla-mac:
+	docker run --name scylla -d scylladb/scylla -p 9042:9042 -p 9180:9180 --network core-network
+
+
 createdb:
 	docker exec -it postgres createdb --username=root --owner=root core
 
