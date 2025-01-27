@@ -48,12 +48,6 @@ func ServerBuilder() (*server.Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	logger.Info("ScyllaDB connected")
-	logger.Info("Running Scylla migration")
-	err = scylladb.RunMigration(logger, cqlSession)
-	if err != nil {
-		return nil, err
-	}
 
 	pgConn, err := db.NewPostgresql(configConfig)
 	if err != nil {
