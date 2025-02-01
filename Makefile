@@ -1,4 +1,4 @@
-.PHONY: network postgres createdb dropdb migrateup migratedown migrateup1 migratedown1 new_migration sqlc api
+.PHONY: network postgres createdb dropdb migrateup migratedown migrateup1 migratedown1 new_migration sqlc api proto
 
 DB_URL=postgresql://root:secret@localhost:5432/core?sslmode=disable
 
@@ -36,8 +36,13 @@ migratedown1:
 new_migration:
 	migrate create -ext sql -dir migrations -seq $(name)
 
-sqlc:
-	sqlc generate
+sqlc-user:
+	cd user && sqlc generate
 
-api-dev:
-	go run ./cmd -config=configs/config.dev.yaml
+auth-dev:
+	go run ./auth -config=configs/config.dev.yaml
+user-dev:
+	go run ./user -config=configs/config.dev.yaml
+
+proto:
+	protoc proto/*/*.proto --go-grpc_out=. --go_out=.
