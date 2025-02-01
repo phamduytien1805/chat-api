@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package user;
+
+option go_package = "proto/user;user";
+
+message CreateUserForm {
+    string username = 1;
+    string email = 2;
+    string credential = 3;
+}
+
+message GetUserByIdentityRequest {
+    string usernameOrEmail = 1;
+    string credential = 2;
+}
+
+
+message GetUserByIdRequest {
+    string id = 1;
+}
+
+message VerifyUserEmailRequest {
+    string userEmail = 1;
+}
+
+message UserResponse {
+    string id = 1;
+    string username = 2;
+    string email = 3;
+    bool email_verified = 4;
+}
+
+message Empty {}
+
+
+service UserService {
+    rpc CreateUserWithCredential(CreateUserForm) returns (UserResponse) {};
+    rpc GetUserByIdentifier(GetUserByIdentityRequest) returns (UserResponse) {};
+    rpc GetUserById(GetUserByIdRequest) returns (UserResponse) {};
+    rpc VerifyUserEmail(VerifyUserEmailRequest) returns (Empty) {};
+}

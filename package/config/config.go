@@ -8,7 +8,8 @@ import (
 
 type Config struct {
 	Env    string        `mapstructure:"env"`
-	Web    *WebConfig    `mapstructure:"web"`
+	Auth   *AuthConfig   `mapstructure:"authsvc"`
+	User   *UserConfig   `mapstructure:"usersvc"`
 	DB     *DBConfig     `mapstructure:"db"`
 	Hash   *HashConfig   `mapstructure:"hash"`
 	Token  *TokenConfig  `mapstructure:"token"`
@@ -18,14 +19,27 @@ type Config struct {
 	Mail   *MailConfig   `mapstructure:"mail"`
 }
 
-type WebConfig struct {
+type AuthConfig struct {
 	Http struct {
 		Server struct {
-			Port           string
-			VerifyEmailUrl string
+			Port string
 		}
 		WS struct {
 			Port string
+		}
+	}
+}
+
+type UserConfig struct {
+	Http struct {
+		Server struct {
+			Port string
+		}
+	}
+	Grpc struct {
+		Server struct {
+			Port string
+			Host string
 		}
 	}
 }
@@ -70,17 +84,17 @@ type ScyllaConfig struct {
 }
 
 type MailConfig struct {
-	Host     string
-	Port     int
-	Username string
-	Password string
-	Origin   string
-	Expired  time.Duration
+	Host           string
+	Port           int
+	Username       string
+	Password       string
+	Origin         string
+	Expired        time.Duration
+	VerifyEmailUrl string
 }
 
 func setDefault() {
-	viper.SetDefault("web.http.server.port", 5001)
-	viper.SetDefault("web.http.ws.port", 5002)
+	viper.SetDefault("auth.http.server.port", 5001)
 	viper.SetDefault("env", "development")
 	viper.SetDefault("db.source", "postgresql://root:secret@localhost:5432/core?sslmode=disable")
 
@@ -110,6 +124,9 @@ func setDefault() {
 	viper.SetDefault("scylla.keyspace", "chatcore")
 	viper.SetDefault("scylla.class", "SimpleStrategy")
 	viper.SetDefault("scylla.replicationFactor", 2)
+
+	viper.SetDefault("user.grpc.server.port", 5002)
+	viper.SetDefault("user.grpc.server.host", "localhost")
 
 }
 

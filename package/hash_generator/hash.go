@@ -33,13 +33,13 @@ type Argon2idHash struct {
 	saltLen uint32
 }
 
-func NewArgon2idHash(config *config.Config) *Argon2idHash {
+func NewArgon2idHash(config *config.HashConfig) *Argon2idHash {
 	return &Argon2idHash{
-		time:    config.Hash.Time,
-		saltLen: config.Hash.SaltLen,
-		memory:  config.Hash.Memory,
-		threads: config.Hash.Threads,
-		keyLen:  config.Hash.KeyLen,
+		time:    config.Time,
+		saltLen: config.SaltLen,
+		memory:  config.Memory,
+		threads: config.Threads,
+		keyLen:  config.KeyLen,
 	}
 }
 

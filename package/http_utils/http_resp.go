@@ -3,6 +3,9 @@ package http_utils
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/go-chi/render"
+	"github.com/phamduytien1805/package/validator"
 )
 
 type envelope map[string]any
@@ -31,4 +34,18 @@ func Ok(w http.ResponseWriter, r *http.Request, status int, payload any) {
 	if err != nil {
 		ServerErrorResponse(w, r, err)
 	}
+}
+
+func DecodeAndValidateRequest(w http.ResponseWriter, r *http.Request, validator *validator.Validate, req interface{}) bool {
+	if err := render.DecodeJSON(r.Body, req); err != nil {
+		BadRequestResponse(w, r, err)
+		return false
+	}
+
+	if err := validator.Struct(req); err != nil {
+		FailedValidationResponse(w, r, err)
+		return false
+	}
+
+	return true
 }
