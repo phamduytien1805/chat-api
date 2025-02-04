@@ -9,9 +9,11 @@ import (
 
 	"github.com/phamduytien1805/package/config"
 	"github.com/phamduytien1805/package/server"
+	"github.com/phamduytien1805/package/validator"
 	"github.com/phamduytien1805/user/infras/db"
 	"github.com/phamduytien1805/user/infras/grpc"
 	"github.com/phamduytien1805/user/infras/hash"
+	"github.com/phamduytien1805/user/infras/http"
 	"github.com/phamduytien1805/user/usecase"
 	"github.com/spf13/viper"
 )
@@ -64,14 +66,20 @@ func AppBuilder() (*server.Server, error) {
 	store := db.NewStore(pgConn)
 
 	hashGen := hash.NewHash(configConfig.Hash)
+	validator := validator.New()
 
 	infra := NewInfraCloser()
 
+	getUserUc := usecase.NewGetUserUsecase(logger, store)
+
 	grpcServer := grpc.NewGrpcServer(configConfig.User, &grpc.Usecases{
 		CreateUser: usecase.NewCreateUserUsecase(logger, store, hashGen),
-		GetUser:    usecase.NewGetUserUsecase(logger, store),
+		GetUser:    getUserUc,
 	})
-	router := NewRouter(grpcServer)
+	httpServer := http.NewHttpServer(configConfig.User, validator, &http.Usecases{
+		GetUser: getUserUc,
+	})
+	router := NewRouter(grpcServer, httpServer)
 
 	return server.NewServer(router, infra), nil
 

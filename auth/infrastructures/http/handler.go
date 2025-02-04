@@ -133,6 +133,8 @@ func (s *HttpServer) resendEmailVerification(w http.ResponseWriter, r *http.Requ
 }
 
 func (s *HttpServer) verifyAuthentication(w http.ResponseWriter, r *http.Request) {
-	http_utils.Ok(w, r, http.StatusOK, true)
+	tokenPayload := r.Context().Value(authorizationPayloadKey).(domain.TokenPayload)
 
+	w.Header().Set("X-Forwarded-Userid", tokenPayload.UserID.String())
+	http_utils.Ok(w, r, http.StatusOK, true)
 }
