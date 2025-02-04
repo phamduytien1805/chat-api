@@ -2,9 +2,12 @@ package db
 
 import (
 	"context"
+	"errors"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/phamduytien1805/package/common"
 	"github.com/phamduytien1805/user/domain"
 )
 
@@ -41,6 +44,14 @@ func (store *SQLStore) CreateUserWithCredential(ctx context.Context, userParams 
 
 		return nil
 	})
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			if pgErr.Code == common.UNIQUE_CONSTRAINT_VIOLATION {
+				return nil, common.ErrorUserResourceConflict
+			}
+		}
+	}
 
 	return &result, err
 }

@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"errors"
+	"log/slog"
 
 	"github.com/google/uuid"
 	"github.com/phamduytien1805/auth/domain"
@@ -11,9 +12,10 @@ import (
 type ResendEmailUsecase struct {
 	mailSvc domain.MailService
 	userSvc domain.UserService
+	logger  *slog.Logger
 }
 
-func NewResendEmailUsecase(mailSvc domain.MailService, userSvc domain.UserService) *ResendEmailUsecase {
+func NewResendEmailUsecase(logger *slog.Logger, mailSvc domain.MailService, userSvc domain.UserService) *ResendEmailUsecase {
 	return &ResendEmailUsecase{
 		mailSvc: mailSvc,
 		userSvc: userSvc,

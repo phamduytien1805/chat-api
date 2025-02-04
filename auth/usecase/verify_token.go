@@ -1,14 +1,20 @@
 package usecase
 
-import "github.com/phamduytien1805/auth/domain"
+import (
+	"log/slog"
+
+	"github.com/phamduytien1805/auth/domain"
+)
 
 type VerifyAccessTokenUsecase struct {
 	tokenSvc domain.TokenService
+	logger   *slog.Logger
 }
 
-func NewVerifyAccessTokenUsecase(tokenSvc domain.TokenService) *VerifyAccessTokenUsecase {
+func NewVerifyAccessTokenUsecase(logger *slog.Logger, tokenSvc domain.TokenService) *VerifyAccessTokenUsecase {
 	return &VerifyAccessTokenUsecase{
 		tokenSvc: tokenSvc,
+		logger:   logger,
 	}
 }
 

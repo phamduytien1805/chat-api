@@ -7,10 +7,13 @@ import (
 	"github.com/go-kit/kit/endpoint"
 	"github.com/google/uuid"
 	"github.com/phamduytien1805/auth/domain"
+	"github.com/phamduytien1805/package/common"
 	"github.com/phamduytien1805/package/config"
 	"github.com/phamduytien1805/package/transport"
 	userpb "github.com/phamduytien1805/proto/user"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var UserClientConn *grpc.ClientConn
@@ -38,30 +41,30 @@ func NewUserClientService(config *config.UserConfig) (domain.UserService, error)
 		createUserWithCredential: transport.NewGrpcEndpoint(
 			conn,
 			"auth",
-			"auth.UserService",
+			"user.UserService",
 			"CreateUserWithCredential",
-			&userpb.CreateUserForm{},
+			&userpb.UserResponse{},
 		),
 		getUserByIdentity: transport.NewGrpcEndpoint(
 			conn,
 			"auth",
-			"auth.UserService",
+			"user.UserService",
 			"GetUserByIdentifier",
-			&userpb.GetUserByIdentityRequest{},
+			&userpb.UserResponse{},
 		),
 		getUserById: transport.NewGrpcEndpoint(
 			conn,
 			"auth",
-			"auth.UserService",
+			"user.UserService",
 			"GetUserById",
-			&userpb.GetUserByIdRequest{},
+			&userpb.UserResponse{},
 		),
 		verifyUserEmail: transport.NewGrpcEndpoint(
 			conn,
 			"auth",
-			"auth.UserService",
+			"user.UserService",
 			"VerifyUserEmail",
-			&userpb.VerifyUserEmailRequest{},
+			&userpb.Empty{},
 		),
 	}, nil
 }
@@ -73,6 +76,9 @@ func (s *UserClientService) CreateUserWithCredential(ctx context.Context, userna
 	}
 	resp, err := s.createUserWithCredential(ctx, req)
 	if err != nil {
+		if status.Code(err) != codes.AlreadyExists {
+			return nil, common.ErrorUserResourceConflict
+		}
 		return nil, err
 	}
 	user := resp.(*userpb.UserResponse)
@@ -86,9 +92,13 @@ func (s *UserClientService) VerifyUserByIdentity(ctx context.Context, identity s
 	}
 	resp, err := s.getUserByIdentity(ctx, req)
 	if err != nil {
+		if status.Code(err) != codes.NotFound {
+			return nil, common.ErrUserNotFound
+		}
 		return nil, err
 	}
 	user := resp.(*userpb.UserResponse)
+
 	return mapUserResponseToDomainUser(user)
 }
 
@@ -118,8 +128,9 @@ func mapUserResponseToDomainUser(user *userpb.UserResponse) (*domain.User, error
 		return nil, err
 	}
 	return &domain.User{
-		ID:       userId,
-		Username: user.Username,
-		Email:    user.Email,
+		ID:            userId,
+		Username:      user.Username,
+		Email:         user.Email,
+		EmailVerified: user.EmailVerified,
 	}, nil
 }

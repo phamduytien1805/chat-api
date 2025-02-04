@@ -2,17 +2,20 @@ package usecase
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/phamduytien1805/user/domain"
 )
 
 type VerifyUserEmailUsecase struct {
-	repo domain.UserRepo
+	repo   domain.UserRepo
+	logger *slog.Logger
 }
 
-func NewVerifyUserEmailUsecase(userRepo domain.UserRepo) *VerifyUserEmailUsecase {
+func NewVerifyUserEmailUsecase(logger *slog.Logger, userRepo domain.UserRepo) *VerifyUserEmailUsecase {
 	return &VerifyUserEmailUsecase{
-		repo: userRepo,
+		repo:   userRepo,
+		logger: logger,
 	}
 }
 

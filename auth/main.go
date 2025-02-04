@@ -62,7 +62,6 @@ func AppBuilder() (*server.Server, error) {
 
 	redisQuerier := redis_engine.NewRedis(configConfig)
 	redisStore := redis_engine.NewRedisStore(redisQuerier)
-	logger.Info("redis connected", "addr", configConfig.Auth.Http.Server)
 
 	validator := validator.New()
 	tokenSvc, err := tokensvc.NewTokenService(configConfig.Token, redisStore)
@@ -82,13 +81,13 @@ func AppBuilder() (*server.Server, error) {
 
 	infra := NewInfraCloser()
 	httpServer := http_adapter.NewHttpServer(configConfig.Auth, validator, &http_adapter.Usecases{
-		Login:             usecase.NewLoginUsecase(userSvc, tokenSvc),
-		Register:          usecase.NewRegisterUsecase(userSvc, mailSvc, tokenSvc),
-		VerifyEmail:       usecase.NewVerifyEmailUsecase(mailSvc),
-		ResendEmail:       usecase.NewResendEmailUsecase(mailSvc, userSvc),
-		RefreshToken:      usecase.NewRefreshTokenUsecase(tokenSvc, userSvc),
-		VerifyAccessToken: usecase.NewVerifyAccessTokenUsecase(tokenSvc),
-		Logout:            usecase.NewLogoutUsecase(tokenSvc),
+		Login:             usecase.NewLoginUsecase(logger, userSvc, tokenSvc),
+		Register:          usecase.NewRegisterUsecase(logger, userSvc, mailSvc, tokenSvc),
+		VerifyEmail:       usecase.NewVerifyEmailUsecase(logger, mailSvc),
+		ResendEmail:       usecase.NewResendEmailUsecase(logger, mailSvc, userSvc),
+		RefreshToken:      usecase.NewRefreshTokenUsecase(logger, tokenSvc, userSvc),
+		VerifyAccessToken: usecase.NewVerifyAccessTokenUsecase(logger, tokenSvc),
+		Logout:            usecase.NewLogoutUsecase(logger, tokenSvc),
 	})
 	router := NewRouter(httpServer, worker)
 

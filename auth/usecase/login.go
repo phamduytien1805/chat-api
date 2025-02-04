@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/phamduytien1805/auth/domain"
 )
@@ -9,12 +10,14 @@ import (
 type LoginUsecase struct {
 	userSvc  domain.UserService
 	tokenSvc domain.TokenService
+	logger   *slog.Logger
 }
 
-func NewLoginUsecase(userSvc domain.UserService, tokenSvc domain.TokenService) *LoginUsecase {
+func NewLoginUsecase(logger *slog.Logger, userSvc domain.UserService, tokenSvc domain.TokenService) *LoginUsecase {
 	return &LoginUsecase{
 		userSvc:  userSvc,
 		tokenSvc: tokenSvc,
+		logger:   logger,
 	}
 }
 

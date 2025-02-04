@@ -74,6 +74,7 @@ func (s *HttpServer) RegisterRoutes() {
 			r.Post("/token", s.refreshToken)
 			r.Post("/verify-email", s.verifyEmailUser)
 			r.With(s.authenticator).Post("/resend-verification", s.resendEmailVerification)
+			r.With(s.authenticator).Get("/verify", s.verifyAuthentication)
 		})
 	})
 }

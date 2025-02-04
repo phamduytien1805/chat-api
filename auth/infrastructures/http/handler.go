@@ -1,10 +1,12 @@
 package http_adapter
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/phamduytien1805/auth/domain"
 	"github.com/phamduytien1805/auth/interfaces"
+	"github.com/phamduytien1805/package/common"
 	"github.com/phamduytien1805/package/http_utils"
 )
 
@@ -16,10 +18,10 @@ func (s *HttpServer) registerUser(w http.ResponseWriter, r *http.Request) {
 
 	createdUser, tokenPair, err := s.uc.Register.Exec(r.Context(), req.Username, req.Email, req.Credential)
 	if err != nil {
-		// if errors.Is(err, user.ErrorUserResourceConflict) {
-		// 	http_utils.EditConflictResponse(w, r, err)
-		// 	return
-		// }
+		if errors.Is(err, common.ErrorUserResourceConflict) {
+			http_utils.EditConflictResponse(w, r, err)
+			return
+		}
 		http_utils.ServerErrorResponse(w, r, err)
 		return
 	}
@@ -37,12 +39,18 @@ func (s *HttpServer) authenticateUserBasic(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	authUser, tokenPair, err := s.uc.Login.Exec(r.Context(), req.Username, req.Credential)
+	identity := req.Username
+	if identity == "" {
+		identity = req.Email
+	}
+
+	authUser, tokenPair, err := s.uc.Login.Exec(r.Context(), identity, req.Credential)
 	if err != nil {
-		// if errors.Is(err, user.ErrorUserInvalidAuthenticate) {
-		// 	http_utils.UnauthorizedResponse(w, r, err)
-		// 	return
-		// }
+		s.logger.Error("Login failed", "detail", err.Error())
+		if errors.Is(err, common.ErrUserNotFound) {
+			http_utils.UnauthorizedResponse(w, r, err)
+			return
+		}
 		http_utils.ServerErrorResponse(w, r, err)
 		return
 	}
@@ -122,4 +130,9 @@ func (s *HttpServer) resendEmailVerification(w http.ResponseWriter, r *http.Requ
 	}
 
 	http_utils.Ok(w, r, http.StatusOK, true)
+}
+
+func (s *HttpServer) verifyAuthentication(w http.ResponseWriter, r *http.Request) {
+	http_utils.Ok(w, r, http.StatusOK, true)
+
 }

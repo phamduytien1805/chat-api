@@ -2,20 +2,23 @@ package usecase
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/google/uuid"
 	"github.com/phamduytien1805/user/domain"
 )
 
 type CreateUserUsecase struct {
-	repo domain.UserRepo
-	hash domain.Hash
+	repo   domain.UserRepo
+	hash   domain.Hash
+	logger *slog.Logger
 }
 
-func NewCreateUserUsecase(userRepo domain.UserRepo, hash domain.Hash) *CreateUserUsecase {
+func NewCreateUserUsecase(logger *slog.Logger, userRepo domain.UserRepo, hash domain.Hash) *CreateUserUsecase {
 	return &CreateUserUsecase{
-		repo: userRepo,
-		hash: hash,
+		repo:   userRepo,
+		hash:   hash,
+		logger: logger,
 	}
 }
 

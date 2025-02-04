@@ -16,7 +16,6 @@ import (
 )
 
 type Usecases struct {
-	AuthBasic  *usecase.AuthBasicUserUsecase
 	CreateUser *usecase.CreateUserUsecase
 	GetUser    *usecase.GetUserUsecase
 	VerifyUser *usecase.VerifyUserEmailUsecase

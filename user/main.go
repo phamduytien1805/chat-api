@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log/slog"
 	"os"
 	"strings"
 
@@ -53,6 +54,7 @@ func AppBuilder() (*server.Server, error) {
 	if err != nil {
 		return nil, err
 	}
+	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
 	pgConn, err := db.NewPostgresql(configConfig.DB)
 	if err != nil {
@@ -66,9 +68,8 @@ func AppBuilder() (*server.Server, error) {
 	infra := NewInfraCloser()
 
 	grpcServer := grpc.NewGrpcServer(configConfig.User, &grpc.Usecases{
-		AuthBasic:  usecase.NewAuthBasicUserUsecase(store, hashGen),
-		CreateUser: usecase.NewCreateUserUsecase(store, hashGen),
-		GetUser:    usecase.NewGetUserUsecase(store),
+		CreateUser: usecase.NewCreateUserUsecase(logger, store, hashGen),
+		GetUser:    usecase.NewGetUserUsecase(logger, store),
 	})
 	router := NewRouter(grpcServer)
 
