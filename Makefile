@@ -39,6 +39,10 @@ new_migration:
 sqlc-user:
 	cd user && sqlc generate
 
+sqlc-hub:
+	cd hub && sqlc generate
+
+
 auth-dev:
 	go run ./auth -config=configs/config.dev.yaml
 user-dev:
