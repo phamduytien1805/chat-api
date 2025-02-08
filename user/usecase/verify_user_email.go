@@ -19,16 +19,16 @@ func NewVerifyUserEmailUsecase(logger *slog.Logger, userRepo domain.UserRepo) *V
 	}
 }
 
-func (s *VerifyUserEmailUsecase) Exec(ctx context.Context, email string) (*domain.User, error) {
+func (s *VerifyUserEmailUsecase) Exec(ctx context.Context, email string) (domain.User, error) {
 	user, err := s.repo.GetUserByEmail(ctx, email)
 	if err != nil {
-		return nil, err
+		return domain.User{}, err
 	}
 
 	user.EmailVerified = true
 	updatedUser, err := s.repo.UpdateUser(ctx, user)
 	if err != nil {
-		return nil, err
+		return domain.User{}, err
 	}
 
 	return updatedUser, nil

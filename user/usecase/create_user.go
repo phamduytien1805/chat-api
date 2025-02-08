@@ -22,29 +22,29 @@ func NewCreateUserUsecase(logger *slog.Logger, userRepo domain.UserRepo, hash do
 	}
 }
 
-func (s *CreateUserUsecase) Exec(ctx context.Context, username, email, credential string) (*domain.User, error) {
+func (s *CreateUserUsecase) Exec(ctx context.Context, username, email, credential string) (domain.User, error) {
 	ID, err := uuid.NewV7()
 
 	if err != nil {
-		return nil, err
+		return domain.User{}, err
 	}
 
 	hashSaltCredential, err := s.hash.GenerateHash([]byte(credential), nil)
 	if err != nil {
-		return nil, err
+		return domain.User{}, err
 	}
 
-	createdUser, err := s.repo.CreateUserWithCredential(ctx, &domain.User{
+	createdUser, err := s.repo.CreateUserWithCredential(ctx, domain.User{
 		ID:            ID,
 		Username:      username,
 		Email:         email,
 		EmailVerified: false,
-	}, &domain.UserCredential{
+	}, domain.UserCredential{
 		HashedPassword: hashSaltCredential,
 	})
 
 	if err != nil {
-		return nil, err
+		return domain.User{}, err
 	}
 
 	return createdUser, nil

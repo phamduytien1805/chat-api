@@ -25,11 +25,11 @@ func NewStore(connPool *pgxpool.Pool) domain.UserRepo {
 	}
 }
 
-func (store *SQLStore) CreateUserWithCredential(ctx context.Context, userParams *domain.User, userCredential *domain.UserCredential) (*domain.User, error) {
+func (store *SQLStore) CreateUserWithCredential(ctx context.Context, userParams domain.User, userCredential domain.UserCredential) (domain.User, error) {
 	var result domain.User
 	err := store.execTx(ctx, func(q *Queries) error {
 		var err error
-		result, err := q.CreateUser(ctx, CreateUserParams(*userParams))
+		result, err := q.CreateUser(ctx, CreateUserParams(userParams))
 		if err != nil {
 			return err
 		}
@@ -48,50 +48,50 @@ func (store *SQLStore) CreateUserWithCredential(ctx context.Context, userParams 
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) {
 			if pgErr.Code == common.UNIQUE_CONSTRAINT_VIOLATION {
-				return nil, common.ErrorUserResourceConflict
+				return domain.User{}, common.ErrorUserResourceConflict
 			}
 		}
 	}
 
-	return &result, err
+	return result, err
 }
 
-func (store *SQLStore) GetUserByEmail(ctx context.Context, email string) (*domain.User, error) {
+func (store *SQLStore) GetUserByEmail(ctx context.Context, email string) (domain.User, error) {
 	userEntity, err := store.q.GetUserByEmail(ctx, email)
 	if err != nil {
-		return nil, err
+		return domain.User{}, err
 	}
 	return mapToUser(userEntity), nil
 }
 
-func (store *SQLStore) GetUserById(ctx context.Context, userID uuid.UUID) (*domain.User, error) {
+func (store *SQLStore) GetUserById(ctx context.Context, userID uuid.UUID) (domain.User, error) {
 	userEntity, err := store.q.GetUserById(ctx, userID)
 	if err != nil {
-		return nil, err
+		return domain.User{}, err
 	}
 	return mapToUser(userEntity), nil
 }
 
-func (store *SQLStore) GetUserCredentialByUserId(ctx context.Context, userID uuid.UUID) (*domain.UserCredential, error) {
+func (store *SQLStore) GetUserCredentialByUserId(ctx context.Context, userID uuid.UUID) (domain.UserCredential, error) {
 	userCredentialEntity, err := store.q.GetUserCredentialByUserId(ctx, userID)
 	if err != nil {
-		return nil, err
+		return domain.UserCredential{}, err
 	}
 	return mapToUserCredential(userCredentialEntity), nil
 }
 
-func (store *SQLStore) GetUserByEmailOrUsername(ctx context.Context, emailOrUsername string) (*domain.User, error) {
+func (store *SQLStore) GetUserByEmailOrUsername(ctx context.Context, emailOrUsername string) (domain.User, error) {
 	userEntity, err := store.q.GetUserByEmailOrUsername(ctx, emailOrUsername)
 	if err != nil {
-		return nil, err
+		return domain.User{}, err
 	}
 	return mapToUser(userEntity), nil
 }
 
-func (store *SQLStore) UpdateUser(ctx context.Context, user *domain.User) (*domain.User, error) {
-	userEntity, err := store.q.UpdateUser(ctx, UpdateUserParams(*user))
+func (store *SQLStore) UpdateUser(ctx context.Context, user domain.User) (domain.User, error) {
+	userEntity, err := store.q.UpdateUser(ctx, UpdateUserParams(user))
 	if err != nil {
-		return nil, err
+		return domain.User{}, err
 	}
 	return mapToUser(userEntity), nil
 }

@@ -21,19 +21,19 @@ func NewGetUserUsecase(logger *slog.Logger, userRepo domain.UserRepo) *GetUserUs
 	}
 }
 
-func (s *GetUserUsecase) ById(ctx context.Context, userID uuid.UUID) (*domain.User, error) {
+func (s *GetUserUsecase) ById(ctx context.Context, userID uuid.UUID) (domain.User, error) {
 	user, err := s.repo.GetUserById(ctx, userID)
 	if err != nil {
-		return nil, err
+		return domain.User{}, err
 	}
 
 	return user, nil
 }
 
-func (s *GetUserUsecase) ByEmailOrUsername(ctx context.Context, emailOrUsername string) (*domain.User, error) {
+func (s *GetUserUsecase) ByEmailOrUsername(ctx context.Context, emailOrUsername string) (domain.User, error) {
 	user, err := s.repo.GetUserByEmailOrUsername(ctx, emailOrUsername)
 	if err != nil {
-		return nil, common.ErrUserNotFound
+		return domain.User{}, common.ErrUserNotFound
 	}
 
 	return user, nil
