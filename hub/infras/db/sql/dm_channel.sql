@@ -18,8 +18,8 @@ INSERT INTO user_dm_channels (
 -- name: GetDMChannelByChannelId :one
 Select * from dm_channels dc where dc.channel_id = $1;
 
---name: GetDMChannelByChannelIds :many
-Select * from dm_channels dc where dc.channel_id = ANY($1);
+-- name: GetDMChannelByChannelIds :many
+Select * from dm_channels dc where dc.channel_id = ANY($1::uuid[]);
 
 -- name: GetUserDMChannels :many
 Select udc.channel_id from user_dm_channels udc where udc.user_id = $1;
