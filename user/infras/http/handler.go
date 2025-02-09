@@ -8,7 +8,7 @@ import (
 )
 
 func (s *HttpServer) getUser(w http.ResponseWriter, r *http.Request) {
-	userId := r.Context().Value(userIdKey).(uuid.UUID)
+	userId := r.Context().Value(http_utils.UserIdKey).(uuid.UUID)
 
 	user, err := s.uc.GetUser.ById(r.Context(), userId)
 	if err != nil {

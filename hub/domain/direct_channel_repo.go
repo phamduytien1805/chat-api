@@ -23,6 +23,6 @@ type UserDirectChannel struct {
 
 type DirectChannelRepo interface {
 	CreateDirectChannel(ctx context.Context, firstUserId, secondUserId uuid.UUID) (DirectChannel, error)
-	GetDirectChannelsById(ctx context.Context, channelIds []uuid.UUID) ([]DirectChannel, error)
-	GetDirectChannelIdsByUserId(ctx context.Context, userId uuid.UUID) ([]uuid.UUID, error)
+	GetDirectChannelsByIds(ctx context.Context, channelIds []uuid.UUID) ([]DirectChannel, error)
+	GetUserDMChannels(ctx context.Context, userId uuid.UUID) ([]uuid.UUID, error)
 }

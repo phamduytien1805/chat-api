@@ -56,7 +56,7 @@ func (s *SQLStore) CreateDirectChannel(ctx context.Context, userID1, userID2 uui
 }
 
 // GetDirectChannelsById returns a list of direct channels by their ids
-func (s *SQLStore) GetDirectChannelsById(ctx context.Context, channelIds []uuid.UUID) ([]domain.DirectChannel, error) {
+func (s *SQLStore) GetDirectChannelsByIds(ctx context.Context, channelIds []uuid.UUID) ([]domain.DirectChannel, error) {
 	dmChannels, err := s.q.GetDMChannelByChannelIds(ctx, channelIds)
 	if err != nil {
 		return nil, err
@@ -74,6 +74,6 @@ func (s *SQLStore) GetDirectChannelsById(ctx context.Context, channelIds []uuid.
 }
 
 // GetDirectChannelIdsByUserId returns a list of direct channel ids by user id
-func (s *SQLStore) GetDirectChannelIdsByUserId(ctx context.Context, userID uuid.UUID) ([]uuid.UUID, error) {
+func (s *SQLStore) GetUserDMChannels(ctx context.Context, userID uuid.UUID) ([]uuid.UUID, error) {
 	return s.q.GetUserDMChannels(ctx, userID)
 }

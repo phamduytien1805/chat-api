@@ -9,16 +9,17 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/cors"
+	"github.com/phamduytien1805/hub/usecase"
 	"github.com/phamduytien1805/package/common"
 	"github.com/phamduytien1805/package/config"
 	"github.com/phamduytien1805/package/http_utils"
 	"github.com/phamduytien1805/package/server"
 	"github.com/phamduytien1805/package/validator"
-	"github.com/phamduytien1805/user/usecase"
 )
 
 type Usecases struct {
-	GetUser *usecase.GetUserUsecase
+	GetDMChannel    *usecase.GetDMChannelUsecase
+	CreateDMChannel *usecase.CreateDMChannelUsecase
 }
 
 type HttpServer struct {
@@ -59,10 +60,10 @@ func (s *HttpServer) RegisterRoutes() {
 	s.router.NotFound(http_utils.NotFoundResponse)
 	s.router.MethodNotAllowed(http_utils.MethodNotAllowedResponse)
 
-	s.router.Route(("/user"), func(r chi.Router) {
+	s.router.Route(("/hub"), func(r chi.Router) {
 		r.Use(http_utils.ExtractForwardedHeader)
 		r.Group(func(r chi.Router) {
-			r.Get("/", s.getUser)
+			r.Post("/", s.createDmChannel)
 		})
 	})
 }
