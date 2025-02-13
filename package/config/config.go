@@ -60,7 +60,8 @@ type HubConfig struct {
 }
 
 type DBConfig struct {
-	Source string
+	UserSource string
+	HubSource  string
 }
 
 type HashConfig struct {

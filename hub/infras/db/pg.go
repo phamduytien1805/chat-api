@@ -20,7 +20,7 @@ const (
 var PGConn *pgxpool.Pool
 
 func NewPostgresql(config *config.DBConfig) (*pgxpool.Pool, error) {
-	dbConfig, err := pgxpool.ParseConfig(config.Source)
+	dbConfig, err := pgxpool.ParseConfig(config.HubSource)
 	if err != nil {
 		return nil, err
 	}
