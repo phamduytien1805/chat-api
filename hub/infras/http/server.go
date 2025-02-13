@@ -33,7 +33,7 @@ type HttpServer struct {
 	uc *Usecases
 }
 
-func NewHttpServer(config *config.UserConfig, validator *validator.Validate, uc *Usecases) server.HttpServer {
+func NewHttpServer(config *config.HubConfig, validator *validator.Validate, uc *Usecases) server.HttpServer {
 	return &HttpServer{
 		logger:    common.NewHttpLog(),
 		validator: validator,

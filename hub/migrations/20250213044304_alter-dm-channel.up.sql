@@ -6,16 +6,11 @@ CREATE TABLE "dm_channels" (
   UNIQUE (user1_id, user2_id)
 );
 
-ALTER TABLE "dm_channels" ADD FOREIGN KEY ("user1_id") REFERENCES "users" ("id");
-ALTER TABLE "dm_channels" ADD FOREIGN KEY ("user2_id") REFERENCES "users" ("id");
-
 CREATE TABLE "user_dm_channels" (
   "user_id" uuid NOT NULL,
   "channel_id" uuid NOT NULL,
-  PRIMARY KEY (user_id, thread_id)
+  PRIMARY KEY (user_id, channel_id)
 );
 
-
-ALTER TABLE "user_dm_channels" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");
 ALTER TABLE "user_dm_channels" ADD FOREIGN KEY ("channel_id") REFERENCES "dm_channels" ("channel_id");
 

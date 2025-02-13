@@ -10,6 +10,7 @@ type Config struct {
 	Env    string        `mapstructure:"env"`
 	Auth   *AuthConfig   `mapstructure:"authsvc"`
 	User   *UserConfig   `mapstructure:"usersvc"`
+	Hub    *HubConfig    `mapstructure:"hubsvc"`
 	DB     *DBConfig     `mapstructure:"db"`
 	Hash   *HashConfig   `mapstructure:"hash"`
 	Token  *TokenConfig  `mapstructure:"token"`
@@ -43,6 +44,21 @@ type UserConfig struct {
 		}
 	}
 }
+
+type HubConfig struct {
+	Http struct {
+		Server struct {
+			Port string
+		}
+	}
+	Grpc struct {
+		Server struct {
+			Port string
+			Host string
+		}
+	}
+}
+
 type DBConfig struct {
 	Source string
 }

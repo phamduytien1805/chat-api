@@ -70,7 +70,7 @@ func AppBuilder() (*server.Server, error) {
 	getDMUc := usecase.NewGetDMChannelUsecase(logger, store)
 	createDMUc := usecase.NewCreateDMChannelUsecase(logger, store)
 
-	httpServer := http.NewHttpServer(configConfig.User, validator, &http.Usecases{
+	httpServer := http.NewHttpServer(configConfig.Hub, validator, &http.Usecases{
 		CreateDMChannel: createDMUc,
 		GetDMChannel:    getDMUc,
 	})
